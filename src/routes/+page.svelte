@@ -1,5 +1,21 @@
 <script lang="ts">
+	import { isAuthenticated, user } from '$lib/stores'
+	
 	let { data } = $props()
+	
+	// Reactive auth state
+	let isAuth = $state(false)
+	let currentUser = $state<any>(null)
+	
+	$effect(() => {
+		const unsubAuth = isAuthenticated.subscribe(value => isAuth = value)
+		const unsubUser = user.subscribe(value => currentUser = value)
+		
+		return () => {
+			unsubAuth()
+			unsubUser()
+		}
+	})
 </script>
 
 <!-- Hero Section -->
@@ -15,10 +31,10 @@
 				AI와 함께 더 나은 코드를 작성하고, 지식을 공유하세요.
 			</p>
 			
-			{#if data.session}
+			{#if isAuth && currentUser}
 				<div class="mt-10">
 					<p class="text-lg text-gray-700 mb-6">
-						환영합니다, <span class="font-semibold text-blue-600">{data.session.user.user_metadata?.full_name || data.session.user.email?.split('@')[0]}</span>님!
+						환영합니다, <span class="font-semibold text-blue-600">{currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0]}</span>님!
 					</p>
 					<div class="flex flex-col sm:flex-row gap-4 justify-center">
 						<a 
@@ -113,7 +129,7 @@
 		<p class="mt-4 text-xl text-blue-100">
 			Claude Code Korea 커뮤니티에 참여하여 더 나은 개발자가 되어보세요.
 		</p>
-		{#if !data.session}
+		{#if !isAuth}
 			<div class="mt-8">
 				<a 
 					href="/auth" 

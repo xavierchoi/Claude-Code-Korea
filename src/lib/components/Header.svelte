@@ -1,18 +1,34 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import { supabase } from '$lib/supabase'
 	import { goto } from '$app/navigation'
+	import { auth, isAuthenticated, user } from '$lib/stores'
 	
 	let { data } = $props()
 	let mobileMenuOpen = $state(false)
 	let userMenuOpen = $state(false)
 	
+	// Use reactive variables for auth state
+	let authState = $state<ReturnType<typeof auth.subscribe>>()
+	let isAuth = $state(false)
+	let currentUser = $state<any>(null)
+	
+	// Subscribe to auth stores
+	$effect(() => {
+		const unsubAuth = isAuthenticated.subscribe(value => isAuth = value)
+		const unsubUser = user.subscribe(value => currentUser = value)
+		
+		return () => {
+			unsubAuth()
+			unsubUser()
+		}
+	})
+	
 	async function signOut() {
-		const { error } = await supabase.auth.signOut()
-		if (error) {
-			console.error('Error signing out:', error)
-		} else {
+		try {
+			await auth.signOut()
 			goto('/')
+		} catch (error) {
+			console.error('Error signing out:', error)
 		}
 	}
 	
@@ -85,15 +101,21 @@
 			
 			<!-- Desktop User Menu -->
 			<div class="hidden md:flex items-center space-x-4">
-				{#if data.session}
+				{#if isAuth && currentUser}
+					<a
+						href="/posts/new"
+						class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+					>
+						글쓰기
+					</a>
 					<div class="relative">
 						<button
 							onclick={(e) => { e.stopPropagation(); toggleUserMenu(); }}
 							class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none"
 						>
-							{#if data.session.user.user_metadata?.avatar_url}
+							{#if currentUser.user_metadata?.avatar_url}
 								<img 
-									src={data.session.user.user_metadata.avatar_url} 
+									src={currentUser.user_metadata.avatar_url} 
 									alt="프로필" 
 									class="w-8 h-8 rounded-full border-2 border-gray-200"
 								/>
@@ -105,7 +127,7 @@
 								</div>
 							{/if}
 							<span class="text-sm font-medium">
-								{data.session.user.user_metadata?.full_name || data.session.user.email?.split('@')[0]}
+								{currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0]}
 							</span>
 							<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -205,11 +227,11 @@
 				
 				<!-- Mobile User Menu -->
 				<div class="mt-4 pt-4 border-t border-gray-200">
-					{#if data.session}
+					{#if isAuth && currentUser}
 						<div class="flex items-center space-x-3 px-3 py-2">
-							{#if data.session.user.user_metadata?.avatar_url}
+							{#if currentUser.user_metadata?.avatar_url}
 								<img 
-									src={data.session.user.user_metadata.avatar_url} 
+									src={currentUser.user_metadata.avatar_url} 
 									alt="프로필" 
 									class="w-10 h-10 rounded-full border-2 border-gray-200"
 								/>
@@ -222,14 +244,20 @@
 							{/if}
 							<div>
 								<div class="text-base font-medium text-gray-900">
-									{data.session.user.user_metadata?.full_name || '사용자'}
+									{currentUser.user_metadata?.full_name || '사용자'}
 								</div>
 								<div class="text-sm text-gray-500">
-									{data.session.user.email}
+									{currentUser.email}
 								</div>
 							</div>
 						</div>
 						<div class="mt-3 space-y-1">
+							<a 
+								href="/posts/new" 
+								class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+							>
+								글쓰기
+							</a>
 							<a 
 								href="/profile" 
 								class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
