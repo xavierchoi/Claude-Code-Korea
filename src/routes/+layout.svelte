@@ -3,6 +3,8 @@
 	import { invalidate } from '$app/navigation'
 	import { onMount } from 'svelte'
 	import { supabase } from '$lib/supabase'
+	import Header from '$lib/components/Header.svelte'
+	import Footer from '$lib/components/Footer.svelte'
 
 	let { children, data } = $props();
 
@@ -20,4 +22,12 @@
 	})
 </script>
 
-{@render children()}
+<div class="min-h-screen flex flex-col bg-white">
+	<Header {data} />
+	
+	<main class="flex-1">
+		{@render children()}
+	</main>
+	
+	<Footer />
+</div>

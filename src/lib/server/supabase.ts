@@ -16,10 +16,11 @@ export const handle: Handle = async ({ event, resolve }) => {
   })
 
   /**
-   * Get session with proper error handling and token refresh
+   * Get session with proper error handling and secure user validation
    */
   event.locals.safeGetSession = async () => {
     try {
+      // First get the session
       const {
         data: { session },
         error: sessionError
@@ -34,7 +35,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         return { session: null, user: null }
       }
 
-      // Validate the user with the current session
+      // Always validate the user with getUser() for security
       const {
         data: { user },
         error: userError,
@@ -42,12 +43,21 @@ export const handle: Handle = async ({ event, resolve }) => {
       
       if (userError) {
         console.error('User validation error:', userError)
-        // Clear invalid session
-        await event.locals.supabase.auth.signOut()
         return { session: null, user: null }
       }
 
-      return { session, user }
+      if (!user) {
+        return { session: null, user: null }
+      }
+
+      // Return session with validated user
+      return { 
+        session: {
+          ...session,
+          user // Use the validated user from getUser()
+        }, 
+        user 
+      }
     } catch (error) {
       console.error('Safe get session error:', error)
       return { session: null, user: null }

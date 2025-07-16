@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ locals: { supabase, safeGetSession } }) => {
-  const { session } = await safeGetSession()
+  const { session, user } = await safeGetSession()
   
   if (!session) {
     return json({ error: 'Unauthorized' }, { status: 401 })
@@ -11,7 +11,7 @@ export const GET: RequestHandler = async ({ locals: { supabase, safeGetSession }
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
   if (error) {
@@ -23,7 +23,7 @@ export const GET: RequestHandler = async ({ locals: { supabase, safeGetSession }
 }
 
 export const PUT: RequestHandler = async ({ request, locals: { supabase, safeGetSession } }) => {
-  const { session } = await safeGetSession()
+  const { session, user } = await safeGetSession()
   
   if (!session) {
     return json({ error: 'Unauthorized' }, { status: 401 })
@@ -43,7 +43,7 @@ export const PUT: RequestHandler = async ({ request, locals: { supabase, safeGet
         .from('profiles')
         .select('id')
         .eq('username', updates.username)
-        .neq('id', session.user.id)
+        .neq('id', user.id)
         .single()
 
       if (existingProfile) {
@@ -62,7 +62,7 @@ export const PUT: RequestHandler = async ({ request, locals: { supabase, safeGet
         github_username: updates.github_username,
         twitter_username: updates.twitter_username,
       })
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .select()
       .single()
 

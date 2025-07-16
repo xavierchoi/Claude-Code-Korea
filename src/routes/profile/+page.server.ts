@@ -4,7 +4,7 @@ import type { PageServerLoad } from './$types'
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession }, depends }) => {
   depends('supabase:auth')
   
-  const { session } = await safeGetSession()
+  const { session, user } = await safeGetSession()
 
   if (!session) {
     throw redirect(303, '/auth')
@@ -13,11 +13,14 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
   return {
-    session,
+    session: {
+      ...session,
+      user: user // This user is validated via getUser()
+    },
     profile
   }
 }

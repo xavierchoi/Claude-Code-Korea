@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request, locals: { supabase, safeGetSession } }) => {
-  const { session } = await safeGetSession()
+  const { session, user } = await safeGetSession()
   
   if (!session) {
     return json({ error: 'Unauthorized' }, { status: 401 })
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, locals: { supabase, safeGe
 
     // Create unique filename
     const fileExt = file.name.split('.').pop()
-    const fileName = `${session.user.id}/${Date.now()}.${fileExt}`
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -54,7 +54,7 @@ export const POST: RequestHandler = async ({ request, locals: { supabase, safeGe
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ avatar_url: publicUrl })
-      .eq('id', session.user.id)
+      .eq('id', user.id)
 
     if (updateError) {
       console.error('Profile update error:', updateError)

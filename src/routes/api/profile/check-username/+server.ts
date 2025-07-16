@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request, locals: { supabase, safeGetSession } }) => {
-  const { session } = await safeGetSession()
+  const { session, user } = await safeGetSession()
   
   if (!session) {
     return json({ error: 'Unauthorized' }, { status: 401 })
@@ -45,7 +45,7 @@ export const POST: RequestHandler = async ({ request, locals: { supabase, safeGe
       .from('profiles')
       .select('id')
       .eq('username', username)
-      .neq('id', session.user.id)
+      .neq('id', user.id)
       .single()
 
     const available = !existingProfile
