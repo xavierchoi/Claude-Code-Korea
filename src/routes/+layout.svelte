@@ -23,7 +23,9 @@
 				
 				// Fetch or reset profile based on auth state
 				if (session?.user) {
-					profile.fetchProfile(session.user.id)
+					profile.fetchProfile(session.user.id).catch(error => {
+						console.error('Failed to fetch profile in layout:', error)
+					})
 				} else {
 					profile.reset()
 				}

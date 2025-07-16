@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import { goto } from '$app/navigation'
-	import { auth, isAuthenticated, user } from '$lib/stores'
+	import { auth, isAuthenticated, user, profile } from '$lib/stores'
+	import Modal from './Modal.svelte'
 	
 	let { data } = $props()
 	let mobileMenuOpen = $state(false)
 	let userMenuOpen = $state(false)
+	let showProfileModal = $state(false)
 	
 	// Use reactive variables for auth state
 	let authState = $state<ReturnType<typeof auth.subscribe>>()
@@ -30,6 +32,25 @@
 		} catch (error) {
 			console.error('Error signing out:', error)
 		}
+	}
+	
+	async function handleWriteClick(e: Event) {
+		e.preventDefault()
+		
+		if (!currentUser) return
+		
+		const hasUsername = await profile.hasUsername(currentUser.id)
+		
+		if (!hasUsername) {
+			showProfileModal = true
+		} else {
+			goto('/posts/new')
+		}
+	}
+	
+	function handleProfileSetup() {
+		showProfileModal = false
+		goto('/profile?setup=true&highlight=username&from=/posts/new')
 	}
 	
 	function toggleMobileMenu() {
@@ -102,12 +123,12 @@
 			<!-- Desktop User Menu -->
 			<div class="hidden md:flex items-center space-x-4">
 				{#if isAuth && currentUser}
-					<a
-						href="/posts/new"
+					<button
+						onclick={handleWriteClick}
 						class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
 					>
 						글쓰기
-					</a>
+					</button>
 					<div class="relative">
 						<button
 							onclick={(e) => { e.stopPropagation(); toggleUserMenu(); }}
@@ -252,12 +273,12 @@
 							</div>
 						</div>
 						<div class="mt-3 space-y-1">
-							<a 
-								href="/posts/new" 
-								class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+							<button 
+								onclick={handleWriteClick}
+								class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
 							>
 								글쓰기
-							</a>
+							</button>
 							<a 
 								href="/profile" 
 								class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
@@ -296,3 +317,37 @@
 		{/if}
 	</div>
 </header>
+
+<!-- Profile Setup Modal -->
+<Modal 
+	open={showProfileModal} 
+	onClose={() => showProfileModal = false}
+	title="프로필 설정 필요"
+>
+	{#snippet children()}
+		<div class="text-center">
+			<div class="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 mb-4">
+				<svg class="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+				</svg>
+			</div>
+			<p class="text-gray-700 mb-6">
+				글을 작성하기 전에 먼저 사용자명을 설정해주세요.
+			</p>
+			<div class="flex flex-col sm:flex-row gap-3 justify-center">
+				<button
+					onclick={handleProfileSetup}
+					class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+				>
+					설정하러 이동하기
+				</button>
+				<button
+					onclick={() => showProfileModal = false}
+					class="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors"
+				>
+					나중에
+				</button>
+			</div>
+		</div>
+	{/snippet}
+</Modal>

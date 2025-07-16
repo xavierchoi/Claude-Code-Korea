@@ -1,20 +1,24 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
-	import { invalidateAll } from '$app/navigation'
+	import { invalidateAll, goto } from '$app/navigation'
+	import { page } from '$app/stores'
+	import { onMount } from 'svelte'
 	
 	let { data } = $props()
 	
-	let loading = false
-	let message = ''
-	let messageType: 'success' | 'error' = 'success'
-	let usernameCheckLoading = false
-	let usernameAvailable: boolean | null = null
-	let usernameError = ''
-	let avatarUploading = false
-	let avatarPreview = data.profile?.avatar_url || ''
+	let loading = $state(false)
+	let message = $state('')
+	let messageType = $state<'success' | 'error'>('success')
+	let usernameCheckLoading = $state(false)
+	let usernameAvailable = $state<boolean | null>(null)
+	let usernameError = $state('')
+	let avatarUploading = $state(false)
+	let avatarPreview = $state(data.profile?.avatar_url || '')
+	let highlightUsername = $state(false)
+	let redirectTo = $state<string | null>(null)
 	
-	// Form data
-	let formData = {
+	// Form data - use $state for reactivity in Svelte 5
+	let formData = $state({
 		username: data.profile?.username || '',
 		full_name: data.profile?.full_name || '',
 		bio: data.profile?.bio || '',
@@ -22,10 +26,26 @@
 		location: data.profile?.location || '',
 		github_username: data.profile?.github_username || '',
 		twitter_username: data.profile?.twitter_username || ''
-	}
+	})
 	
 	// Debounced username check
 	let usernameTimeout: NodeJS.Timeout
+	
+	onMount(() => {
+		// Check URL parameters
+		const urlParams = new URLSearchParams($page.url.search)
+		const setup = urlParams.get('setup')
+		const highlight = urlParams.get('highlight')
+		redirectTo = urlParams.get('from')
+		
+		if (setup === 'true' && highlight === 'username') {
+			highlightUsername = true
+			// Remove highlight after animation
+			setTimeout(() => {
+				highlightUsername = false
+			}, 3000)
+		}
+	})
 	
 	async function checkUsername(username: string) {
 		if (!username || username === data.profile?.username) {
@@ -122,6 +142,13 @@
 				message = '프로필이 성공적으로 업데이트되었습니다!'
 				messageType = 'success'
 				await invalidateAll()
+				
+				// Redirect if there's a return URL
+				if (redirectTo) {
+					setTimeout(() => {
+						goto(redirectTo)
+					}, 1000)
+				}
 			} else {
 				message = result.error || '프로필 업데이트에 실패했습니다.'
 				messageType = 'error'
@@ -146,7 +173,7 @@
 				</p>
 			</div>
 			
-			<form on:submit|preventDefault={updateProfile} class="px-6 py-4 space-y-6">
+			<form onsubmit={(e) => { e.preventDefault(); updateProfile(); }} class="px-6 py-4 space-y-6">
 				{#if message}
 					<div class="rounded-md p-4 {messageType === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}">
 						{message}
@@ -190,7 +217,7 @@
 								type="file" 
 								accept="image/*" 
 								class="sr-only" 
-								on:change={uploadAvatar}
+								onchange={uploadAvatar}
 								disabled={avatarUploading}
 							/>
 							<p class="mt-1 text-xs text-gray-500">
@@ -201,17 +228,19 @@
 				</div>
 				
 				<!-- Username -->
-				<div>
+				<div class:highlight-field={highlightUsername}>
 					<label for="username" class="block text-sm font-medium text-gray-700">
-						사용자명 *
+						사용자명 * {#if highlightUsername}<span class="text-blue-600 text-xs ml-2">← 여기에 사용자명을 입력하세요</span>{/if}
 					</label>
 					<div class="mt-1 relative">
 						<input
 							type="text"
 							id="username"
 							bind:value={formData.username}
-							on:input={onUsernameChange}
+							oninput={onUsernameChange}
+							onfocus={() => highlightUsername = false}
 							class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+							class:highlight-input={highlightUsername}
 							placeholder="사용자명을 입력하세요"
 							required
 						/>
@@ -339,3 +368,29 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	@keyframes highlight {
+		0% {
+			background-color: rgba(250, 204, 21, 0);
+		}
+		50% {
+			background-color: rgba(250, 204, 21, 0.3);
+		}
+		100% {
+			background-color: rgba(250, 204, 21, 0);
+		}
+	}
+	
+	:global(.highlight-field) {
+		animation: highlight 1.5s ease-in-out infinite;
+		padding: 0.5rem;
+		margin: -0.5rem;
+		border-radius: 0.375rem;
+	}
+	
+	:global(.highlight-input) {
+		box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3);
+		border-color: rgb(250, 204, 21);
+	}
+</style>

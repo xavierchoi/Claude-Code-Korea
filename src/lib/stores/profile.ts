@@ -38,9 +38,32 @@ function createProfileStore() {
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .single()
+          .maybeSingle() // Use maybeSingle instead of single to handle no rows gracefully
         
         if (error) throw error
+        
+        // If no profile exists, create a minimal one
+        if (!data) {
+          console.log('No profile found, creating minimal profile')
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({ id: userId })
+            .select()
+            .single()
+          
+          if (createError) {
+            console.error('Error creating profile:', createError)
+            throw createError
+          }
+          
+          set({
+            profile: newProfile,
+            loading: false,
+            error: null
+          })
+          
+          return newProfile
+        }
         
         set({
           profile: data,
@@ -56,7 +79,8 @@ function createProfileStore() {
           loading: false,
           error: message
         })
-        throw error
+        console.error('Error fetching profile:', error)
+        // Don't throw to prevent uncaught promise errors
       }
     },
     
@@ -106,6 +130,28 @@ function createProfileStore() {
         if (error) throw error
         
         return data.length === 0
+      } catch (error) {
+        console.error('Error checking username:', error)
+        return false
+      }
+    },
+    
+    async hasUsername(userId: string) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', userId)
+          .maybeSingle()
+        
+        if (error) throw error
+        
+        // If no profile exists, return false
+        if (!data) {
+          return false
+        }
+        
+        return !!data.username
       } catch (error) {
         console.error('Error checking username:', error)
         return false
