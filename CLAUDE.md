@@ -174,6 +174,7 @@ Beyond the current `profiles` table, the system will include:
 4. **Read Requirements**: Read `/Users/internetbasedboy/cckorea/.kiro/specs/claude-code-korea-community/requirements.md` for detailed requirements
 5. **Check Current Tasks**: Read `/Users/internetbasedboy/cckorea/.kiro/specs/claude-code-korea-community/tasks.md` to identify which tasks to work on
 6. **Update Task Status**: After completing tasks, update the tasks.md file to mark them as completed
+7. **Update Log Check**: Read `/Users/internetbasedboy/cckorea/CHANGELOG.md` for latest changelog of the project
 
 ## Working with Supabase
 
