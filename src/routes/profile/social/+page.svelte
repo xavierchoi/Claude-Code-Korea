@@ -1,6 +1,11 @@
 <script lang="ts">
 	import ProfileLayout from '$lib/components/profile/ProfileLayout.svelte'
 	
+	// Heroicons imports
+	import GlobeAltIcon from 'heroicons/24/outline/globe-alt.svg?raw'
+	import PencilIcon from 'heroicons/24/outline/pencil.svg?raw'
+	import BriefcaseIcon from 'heroicons/24/outline/briefcase.svg?raw'
+	
 	let { data } = $props()
 	
 	let loading = $state(false)
@@ -67,9 +72,9 @@
 		<div>
 			<label for="website" class="block text-sm font-medium text-gray-700">
 				<div class="flex items-center">
-					<svg class="w-5 h-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9m0 9c-5 0-9-4-9-9s4-9 9-9" />
-					</svg>
+					<div class="w-5 h-5 mr-2 text-gray-400">
+						{@html GlobeAltIcon}
+					</div>
 					웹사이트
 				</div>
 			</label>
@@ -196,9 +201,9 @@
 		<div>
 			<label for="blog_url" class="block text-sm font-medium text-gray-700">
 				<div class="flex items-center">
-					<svg class="w-5 h-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-					</svg>
+					<div class="w-5 h-5 mr-2 text-gray-400">
+						{@html PencilIcon}
+					</div>
 					블로그
 				</div>
 			</label>
@@ -215,9 +220,9 @@
 		<div>
 			<label for="portfolio_url" class="block text-sm font-medium text-gray-700">
 				<div class="flex items-center">
-					<svg class="w-5 h-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-					</svg>
+					<div class="w-5 h-5 mr-2 text-gray-400">
+						{@html BriefcaseIcon}
+					</div>
 					포트폴리오
 				</div>
 			</label>

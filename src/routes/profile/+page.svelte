@@ -4,6 +4,22 @@
 	import { page } from '$app/stores'
 	import { onMount } from 'svelte'
 	
+	// Heroicons imports
+	import UserIcon from 'heroicons/24/outline/user.svg?raw'
+	import BriefcaseIcon from 'heroicons/24/outline/briefcase.svg?raw'
+	import LinkIcon from 'heroicons/24/outline/link.svg?raw'
+	import AcademicCapIcon from 'heroicons/24/outline/academic-cap.svg?raw'
+	import CogIcon from 'heroicons/24/outline/cog-6-tooth.svg?raw'
+	import BellIcon from 'heroicons/24/outline/bell.svg?raw'
+	import CheckCircleIcon from 'heroicons/24/solid/check-circle.svg?raw'
+	import XCircleIcon from 'heroicons/24/outline/x-circle.svg?raw'
+	import ExclamationTriangleIcon from 'heroicons/24/solid/exclamation-triangle.svg?raw'
+	import ShieldCheckIcon from 'heroicons/24/solid/shield-check.svg?raw'
+	import InformationCircleIcon from 'heroicons/24/solid/information-circle.svg?raw'
+	import LockClosedIcon from 'heroicons/24/solid/lock-closed.svg?raw'
+	import DocumentArrowDownIcon from 'heroicons/24/outline/document-arrow-down.svg?raw'
+	import ShareIcon from 'heroicons/24/outline/share.svg?raw'
+	
 	let { data } = $props()
 	
 	let loading = $state(false)
@@ -224,41 +240,39 @@
 				<div class="hidden lg:block">
 					<nav class="space-y-1">
 						<a href="/profile" class="bg-blue-50 text-blue-700 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-							<svg class="text-blue-500 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-							</svg>
+							<div class="text-blue-500 mr-3 h-5 w-5">
+								{@html UserIcon}
+							</div>
 							기본 정보
 						</a>
 						<a href="/profile/career" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />
-							</svg>
+							<div class="text-gray-400 mr-3 h-5 w-5">
+								{@html BriefcaseIcon}
+							</div>
 							커리어
 						</a>
 						<a href="/profile/social" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.102m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-							</svg>
+							<div class="text-gray-400 mr-3 h-5 w-5">
+								{@html LinkIcon}
+							</div>
 							소셜 링크
 						</a>
 						<a href="/profile/credentials" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-							</svg>
+							<div class="text-gray-400 mr-3 h-5 w-5">
+								{@html AcademicCapIcon}
+							</div>
 							이력 및 학력
 						</a>
 						<a href="/profile/account" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-							</svg>
+							<div class="text-gray-400 mr-3 h-5 w-5">
+								{@html CogIcon}
+							</div>
 							계정 설정
 						</a>
 						<a href="/profile/notifications" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4.868 19.462A17.937 17.937 0 0112 21a17.937 17.937 0 017.132-1.538M6.16 6.16a9 9 0 1011.68 11.68M6.16 6.16L4.16 4.16m2 2L8.16 8.16" />
-							</svg>
+							<div class="text-gray-400 mr-3 h-5 w-5">
+								{@html BellIcon}
+							</div>
 							알림 설정
 						</a>
 					</nav>
@@ -297,9 +311,9 @@
 								/>
 							{:else}
 								<div class="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
-									<svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-									</svg>
+									<div class="h-8 w-8 text-gray-400">
+										{@html UserIcon}
+									</div>
 								</div>
 							{/if}
 						</div>

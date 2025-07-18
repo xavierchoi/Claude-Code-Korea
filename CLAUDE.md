@@ -39,6 +39,32 @@ npm run db:migrate   # Run database migrations
 npm run db:studio    # Open Drizzle Studio for database inspection
 ```
 
+## Project Management
+
+### Changelog Management
+**IMPORTANT**: 매 커밋마다 `CHANGELOG.md` 파일을 업데이트해야 합니다.
+
+#### 업데이트 로그 작성 가이드라인:
+1. **새로운 기능 추가**: `### Added` 섹션에 기록
+2. **기존 기능 수정**: `### Changed` 섹션에 기록
+3. **버그 수정**: `### Fixed` 섹션에 기록
+4. **기술적 개선**: `### Technical` 섹션에 기록
+
+#### 버전 관리 규칙:
+- **Major (X.0.0)**: 큰 아키텍처 변경, 호환성 파괴
+- **Minor (X.Y.0)**: 새로운 기능 추가
+- **Patch (X.Y.Z)**: 버그 수정 및 소규모 개선
+
+#### 커밋 시 체크리스트:
+- [ ] CHANGELOG.md 업데이트 완료
+- [ ] 적절한 버전 번호 부여
+- [ ] 커밋 메시지에 변경 사항 요약 포함
+- [ ] 기술적 세부 사항 기록
+
+## Changelog Guidelines
+
+- **CHANGELOG.md는 한글로 작성하세요.**
+
 ## Architecture Overview
 
 ### Technology Stack
@@ -148,3 +174,11 @@ Beyond the current `profiles` table, the system will include:
 4. **Read Requirements**: Read `/Users/internetbasedboy/cckorea/.kiro/specs/claude-code-korea-community/requirements.md` for detailed requirements
 5. **Check Current Tasks**: Read `/Users/internetbasedboy/cckorea/.kiro/specs/claude-code-korea-community/tasks.md` to identify which tasks to work on
 6. **Update Task Status**: After completing tasks, update the tasks.md file to mark them as completed
+
+## Working with Supabase
+
+- supabase 관련 작업시, 이 프로젝트엔 supabase mcp가 항상 연결되어 있으므로 사용하시오.
+
+## Development Quality Guidelines
+
+- 모든 작업은 프로덕션 레디 수준의 높은 퀄리티로 이루어져야 하며, 임시적인 조치는 허용되지 않음.

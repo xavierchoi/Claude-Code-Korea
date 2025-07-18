@@ -138,23 +138,31 @@ function createProfileStore() {
     
     async hasUsername(userId: string) {
       try {
+        if (!userId) {
+          console.error('hasUsername: No userId provided')
+          return false
+        }
+        
+        // 더 간단한 쿼리로 시도
         const { data, error } = await supabase
           .from('profiles')
           .select('username')
           .eq('id', userId)
-          .maybeSingle()
+          .single()
         
-        if (error) throw error
-        
-        // If no profile exists, return false
-        if (!data) {
-          return false
+        if (error) {
+          console.error('hasUsername: Supabase error:', error)
+          // 프로필이 없는 경우 (PGRST116)라면 false 반환
+          if (error.code === 'PGRST116') {
+            return false
+          }
+          throw error
         }
         
         return !!data.username
       } catch (error) {
-        console.error('Error checking username:', error)
-        return false
+        console.error('hasUsername: Exception:', error)
+        throw error
       }
     },
     
