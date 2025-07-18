@@ -2,6 +2,7 @@
 	import { page } from '$app/stores'
 	import { goto } from '$app/navigation'
 	import { auth, isAuthenticated, user, profile } from '$lib/stores'
+	import { supabase } from '$lib/supabase'
 	import Modal from './Modal.svelte'
 	
 	let { data } = $props()
@@ -10,28 +11,29 @@
 	let showProfileModal = $state(false)
 	
 	// Use reactive variables for auth state
-	let authState = $state<ReturnType<typeof auth.subscribe>>()
 	let isAuth = $state(false)
 	let currentUser = $state<any>(null)
 	
-	// Subscribe to auth stores
+	// Reactively update auth state based on data.session
 	$effect(() => {
-		const unsubAuth = isAuthenticated.subscribe(value => isAuth = value)
-		const unsubUser = user.subscribe(value => currentUser = value)
-		
-		return () => {
-			unsubAuth()
-			unsubUser()
-		}
+		isAuth = !!data.session
+		currentUser = data.session?.user || null
 	})
 	
-	async function signOut() {
-		try {
-			await auth.signOut()
-			goto('/')
-		} catch (error) {
-			console.error('Error signing out:', error)
-		}
+	function signOut() {
+		console.log('Signing out...');
+		
+		// 간단한 방법: 모든 로컬 스토리지 삭제 후 새로고침
+		localStorage.clear();
+		sessionStorage.clear();
+		
+		// 쿠키도 삭제
+		document.cookie.split(";").forEach(function(c) { 
+			document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+		});
+		
+		// 강제 새로고침
+		window.location.href = '/';
 	}
 	
 	async function handleWriteClick(e: Event) {

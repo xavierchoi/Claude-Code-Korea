@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import MarkdownEditor from '$lib/components/MarkdownEditor.svelte';
 	import type { PageData } from './$types';
 	
 	let { data }: { data: PageData } = $props();
 	
-	let title = '';
-	let content = '';
-	let categoryId = '';
-	let isPublished = true;
+	let title = data.post.title;
+	let content = data.post.content;
+	let categoryId = data.post.category_id;
+	let isPublished = data.post.is_published;
+	let isPinned = data.post.is_pinned;
+	let isLocked = data.post.is_locked;
 	let isSubmitting = false;
 	let error = '';
 	
@@ -34,8 +37,8 @@
 		error = '';
 		
 		try {
-			const response = await fetch('/api/posts', {
-				method: 'POST',
+			const response = await fetch(`/api/posts/${data.post.id}`, {
+				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
@@ -43,18 +46,20 @@
 					title: title.trim(),
 					content,
 					category_id: categoryId,
-					is_published: isPublished
+					is_published: isPublished,
+					is_pinned: isPinned,
+					is_locked: isLocked
 				})
 			});
 			
 			if (!response.ok) {
 				const data = await response.json();
-				throw new Error(data.error || '게시글 작성에 실패했습니다.');
+				throw new Error(data.error || '게시글 수정에 실패했습니다.');
 			}
 			
 			const { post } = await response.json();
 			
-			// 작성된 게시글로 이동
+			// 수정된 게시글로 이동
 			goto(`/forum/${post.category.slug}/${post.slug}`);
 		} catch (err) {
 			error = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
@@ -65,7 +70,7 @@
 </script>
 
 <div class="container mx-auto px-4 py-8 max-w-4xl">
-	<h1 class="text-3xl font-bold mb-8">새 게시글 작성</h1>
+	<h1 class="text-3xl font-bold mb-8">게시글 수정</h1>
 	
 	<form on:submit={handleSubmit} class="space-y-6">
 		{#if error}
@@ -120,19 +125,53 @@
 			/>
 		</div>
 		
-		<div class="flex items-center">
-			<input
-				type="checkbox"
-				id="isPublished"
-				bind:checked={isPublished}
-				class="rounded border border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-			/>
-			<label for="isPublished" class="ml-2 text-sm text-gray-700">
-				바로 게시하기
-			</label>
-			<p class="ml-4 text-xs text-gray-500">
-				체크 해제 시 임시 저장되며, 나중에 게시할 수 있습니다.
-			</p>
+		<div class="space-y-3">
+			<div class="flex items-center">
+				<input
+					type="checkbox"
+					id="isPublished"
+					bind:checked={isPublished}
+					class="rounded border border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+				/>
+				<label for="isPublished" class="ml-2 text-sm text-gray-700">
+					게시하기
+				</label>
+				<p class="ml-4 text-xs text-gray-500">
+					체크 해제 시 임시 저장 상태가 됩니다.
+				</p>
+			</div>
+			
+			{#if data.isAdmin}
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						id="isPinned"
+						bind:checked={isPinned}
+						class="rounded border border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+					/>
+					<label for="isPinned" class="ml-2 text-sm text-gray-700">
+						게시글 고정
+					</label>
+					<p class="ml-4 text-xs text-gray-500">
+						카테고리 상단에 고정됩니다.
+					</p>
+				</div>
+				
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						id="isLocked"
+						bind:checked={isLocked}
+						class="rounded border border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+					/>
+					<label for="isLocked" class="ml-2 text-sm text-gray-700">
+						댓글 잠금
+					</label>
+					<p class="ml-4 text-xs text-gray-500">
+						새로운 댓글을 작성할 수 없게 됩니다.
+					</p>
+				</div>
+			{/if}
 		</div>
 		
 		<div class="flex gap-4 pt-4">
@@ -142,13 +181,13 @@
 				class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
 			>
 				{#if isSubmitting}
-					작성 중...
+					수정 중...
 				{:else}
-					{isPublished ? '게시하기' : '임시 저장'}
+					수정하기
 				{/if}
 			</button>
 			<a
-				href="/forum"
+				href="/forum/{data.post.category.slug}/{data.post.slug}"
 				class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
 			>
 				취소

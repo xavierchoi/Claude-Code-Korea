@@ -38,22 +38,11 @@
 				if (response.ok && result.success) {
 					console.log('Server session set successfully')
 					
-					// Also set client-side session for immediate use
-					await supabase.auth.setSession({
-						access_token: accessToken,
-						refresh_token: refreshToken
-					})
+					// 클라이언트 세션 설정을 건너뛰고 바로 리디렉션
+					console.log('Redirecting to home page...')
 					
-					// Force invalidations to ensure proper sync
-					await invalidate('supabase:auth')
-					await invalidateAll()
-					
-					// Verify both client and server sessions
-					const { data: clientSession } = await supabase.auth.getSession()
-					console.log('Client session verification:', !!clientSession.session)
-					
-					// Redirect to home
-					goto('/', { replaceState: true })
+					// 즉시 리디렉션
+					window.location.replace('/')
 				} else {
 					console.error('Server session error:', result.error)
 					error = result.error || 'Failed to create session'
@@ -66,8 +55,16 @@
 					console.error('Get session error:', getSessionError)
 					error = getSessionError.message
 				} else if (data.session) {
-					console.log('Session found')
-					goto('/')
+					// Validate user with getUser() for security
+					const { data: { user }, error: userError } = await supabase.auth.getUser()
+					
+					if (userError || !user) {
+						console.error('User validation error:', userError)
+						error = 'Failed to validate user session'
+					} else {
+						console.log('Session found and validated')
+						goto('/')
+					}
 				} else {
 					error = 'No session found'
 				}

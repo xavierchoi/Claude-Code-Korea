@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte'
 	
 	interface Props {
 		open: boolean
@@ -51,6 +50,7 @@
 				type="button"
 				onclick={handleClose}
 				class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+				aria-label="Close modal"
 			>
 				<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

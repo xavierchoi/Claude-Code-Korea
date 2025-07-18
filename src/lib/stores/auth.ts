@@ -33,21 +33,61 @@ function createAuthStore() {
           return
         }
         
-        set({
-          user: session?.user ?? null,
-          session: session ?? null,
-          loading: false,
-          initialized: true
-        })
+        // Validate user with getUser() for security
+        if (session) {
+          const { data: { user }, error: userError } = await supabase.auth.getUser()
+          
+          if (userError || !user) {
+            console.error('User validation error:', userError)
+            set({ user: null, session: null, loading: false, initialized: true })
+            return
+          }
+          
+          set({
+            user: user,
+            session: session,
+            loading: false,
+            initialized: true
+          })
+        } else {
+          set({
+            user: null,
+            session: null,
+            loading: false,
+            initialized: true
+          })
+        }
         
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (_event, session) => {
-            set({
-              user: session?.user ?? null,
-              session: session ?? null,
-              loading: false,
-              initialized: true
-            })
+            if (session) {
+              // Validate user with getUser() for security
+              const { data: { user }, error: userError } = await supabase.auth.getUser()
+              
+              if (userError || !user) {
+                console.error('User validation error in auth state change:', userError)
+                set({
+                  user: null,
+                  session: null,
+                  loading: false,
+                  initialized: true
+                })
+              } else {
+                set({
+                  user: user,
+                  session: session,
+                  loading: false,
+                  initialized: true
+                })
+              }
+            } else {
+              set({
+                user: null,
+                session: null,
+                loading: false,
+                initialized: true
+              })
+            }
           }
         )
         

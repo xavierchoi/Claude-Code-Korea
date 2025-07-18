@@ -54,7 +54,11 @@
 		"@oslojs/encoding": "^1.1.0",
 		"@supabase/ssr": "^0.6.1",
 		"@supabase/supabase-js": "^2.51.0",
+		"@types/dompurify": "^3.0.5",
+		"@types/marked": "^5.0.2",
 		"better-sqlite3": "^11.8.0",
-		"drizzle-orm": "^0.40.0"
+		"dompurify": "^3.2.6",
+		"drizzle-orm": "^0.40.0",
+		"marked": "^16.0.0"
 	}
 }

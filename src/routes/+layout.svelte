@@ -22,10 +22,16 @@
 				await invalidate('supabase:auth')
 				
 				// Fetch or reset profile based on auth state
-				if (session?.user) {
-					profile.fetchProfile(session.user.id).catch(error => {
-						console.error('Failed to fetch profile in layout:', error)
-					})
+				if (session) {
+					// Validate user with getUser() for security
+					const { data: { user }, error } = await supabase.auth.getUser()
+					if (!error && user) {
+						profile.fetchProfile(user.id).catch(error => {
+							console.error('Failed to fetch profile in layout:', error)
+						})
+					} else {
+						profile.reset()
+					}
 				} else {
 					profile.reset()
 				}
