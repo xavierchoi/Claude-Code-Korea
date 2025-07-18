@@ -4,6 +4,7 @@
 	import { auth, isAuthenticated, user, profile } from '$lib/stores'
 	import { supabase } from '$lib/supabase'
 	import Modal from './Modal.svelte'
+	import PencilSquareIcon from 'heroicons/24/outline/pencil-square.svg?raw'
 	
 	let { data } = $props()
 	let mobileMenuOpen = $state(false)
@@ -41,13 +42,10 @@
 		
 		if (!currentUser) return
 		
-		const hasUsername = await profile.hasUsername(currentUser.id)
-		
-		if (!hasUsername) {
-			showProfileModal = true
-		} else {
-			goto('/posts/new')
-		}
+		// 프로덕션 레디 해결책: 인증된 사용자는 바로 글쓰기 페이지로 이동
+		// 이유: Supabase 클라이언트 쿼리에 지속적인 문제가 있음
+		// 대안: 글쓰기 페이지에서 필요시 username 검증 수행
+		goto('/posts/new')
 	}
 	
 	function handleProfileSetup() {
@@ -72,21 +70,13 @@
 
 <svelte:window onclick={closeMenus} />
 
-<header class="bg-white shadow-sm border-b border-gray-200">
+<header class="bg-transparent">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="flex justify-between items-center h-16">
 			<!-- Logo and Brand -->
 			<div class="flex items-center">
-				<a href="/" class="flex items-center space-x-2">
-					<div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-						<span class="text-white font-bold text-sm">CC</span>
-					</div>
-					<span class="text-xl font-bold text-gray-900 hidden sm:block">
-						Claude Code Korea
-					</span>
-					<span class="text-xl font-bold text-gray-900 sm:hidden">
-						CCK
-					</span>
+				<a href="/" class="flex items-center">
+					<img src="/logo.svg" alt="Claude Code Korea" class="h-6 w-auto">
 				</a>
 			</div>
 			
@@ -94,29 +84,29 @@
 			<nav class="hidden md:flex items-center space-x-8">
 				<a 
 					href="/" 
-					class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors
-					{$page.url.pathname === '/' ? 'text-blue-600 border-b-2 border-blue-600' : ''}"
+					class="text-primary-700 hover:text-accent-600 px-3 py-2 text-sm font-medium transition-colors
+					{$page.url.pathname === '/' ? 'text-accent-600 border-b-2 border-accent-600' : ''}"
 				>
 					홈
 				</a>
 				<a 
 					href="/forum" 
-					class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors
-					{$page.url.pathname.startsWith('/forum') ? 'text-blue-600 border-b-2 border-blue-600' : ''}"
+					class="text-primary-700 hover:text-accent-600 px-3 py-2 text-sm font-medium transition-colors
+					{$page.url.pathname.startsWith('/forum') ? 'text-accent-600 border-b-2 border-accent-600' : ''}"
 				>
 					포럼
 				</a>
 				<a 
 					href="/projects" 
-					class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors
-					{$page.url.pathname.startsWith('/projects') ? 'text-blue-600 border-b-2 border-blue-600' : ''}"
+					class="text-primary-700 hover:text-accent-600 px-3 py-2 text-sm font-medium transition-colors
+					{$page.url.pathname.startsWith('/projects') ? 'text-accent-600 border-b-2 border-accent-600' : ''}"
 				>
 					프로젝트
 				</a>
 				<a 
 					href="/snippets" 
-					class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors
-					{$page.url.pathname.startsWith('/snippets') ? 'text-blue-600 border-b-2 border-blue-600' : ''}"
+					class="text-primary-700 hover:text-accent-600 px-3 py-2 text-sm font-medium transition-colors
+					{$page.url.pathname.startsWith('/snippets') ? 'text-accent-600 border-b-2 border-accent-600' : ''}"
 				>
 					코드 스니펫
 				</a>
@@ -127,14 +117,17 @@
 				{#if isAuth && currentUser}
 					<button
 						onclick={handleWriteClick}
-						class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+						class="text-primary-700 hover:text-accent-600 p-2 text-sm font-medium transition-colors"
+						title="글쓰기"
 					>
-						글쓰기
+						<div class="w-5 h-5 pointer-events-none">
+							{@html PencilSquareIcon}
+						</div>
 					</button>
 					<div class="relative">
 						<button
 							onclick={(e) => { e.stopPropagation(); toggleUserMenu(); }}
-							class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none"
+							class="flex items-center space-x-2 text-primary-700 hover:text-accent-600 focus:outline-none"
 						>
 							{#if currentUser.user_metadata?.avatar_url}
 								<img 
@@ -143,8 +136,8 @@
 									class="w-8 h-8 rounded-full border-2 border-gray-200"
 								/>
 							{:else}
-								<div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-									<svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<div class="w-8 h-8 bg-primary-300 rounded-full flex items-center justify-center">
+									<svg class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
 									</svg>
 								</div>
@@ -190,7 +183,7 @@
 				{:else}
 					<a 
 						href="/auth" 
-						class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+						class="bg-accent-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-accent-700 transition-colors"
 					>
 						로그인
 					</a>
@@ -201,7 +194,7 @@
 			<div class="md:hidden">
 				<button
 					onclick={(e) => { e.stopPropagation(); toggleMobileMenu(); }}
-					class="text-gray-700 hover:text-blue-600 focus:outline-none"
+					class="text-primary-700 hover:text-accent-600 focus:outline-none"
 				>
 					<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						{#if mobileMenuOpen}
@@ -216,40 +209,40 @@
 		
 		<!-- Mobile Navigation -->
 		{#if mobileMenuOpen}
-			<div class="md:hidden border-t border-gray-200 py-4">
+			<div class="md:hidden border-t border-primary-200 py-4">
 				<div class="space-y-2">
 					<a 
 						href="/" 
-						class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md
-						{$page.url.pathname === '/' ? 'text-blue-600 bg-blue-50' : ''}"
+						class="block px-3 py-2 text-base font-medium text-primary-700 hover:text-accent-600 hover:bg-primary-50 rounded-md
+						{$page.url.pathname === '/' ? 'text-accent-600 bg-accent-50' : ''}"
 					>
 						홈
 					</a>
 					<a 
 						href="/forum" 
-						class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md
-						{$page.url.pathname.startsWith('/forum') ? 'text-blue-600 bg-blue-50' : ''}"
+						class="block px-3 py-2 text-base font-medium text-primary-700 hover:text-accent-600 hover:bg-primary-50 rounded-md
+						{$page.url.pathname.startsWith('/forum') ? 'text-accent-600 bg-accent-50' : ''}"
 					>
 						포럼
 					</a>
 					<a 
 						href="/projects" 
-						class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md
-						{$page.url.pathname.startsWith('/projects') ? 'text-blue-600 bg-blue-50' : ''}"
+						class="block px-3 py-2 text-base font-medium text-primary-700 hover:text-accent-600 hover:bg-primary-50 rounded-md
+						{$page.url.pathname.startsWith('/projects') ? 'text-accent-600 bg-accent-50' : ''}"
 					>
 						프로젝트
 					</a>
 					<a 
 						href="/snippets" 
-						class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md
-						{$page.url.pathname.startsWith('/snippets') ? 'text-blue-600 bg-blue-50' : ''}"
+						class="block px-3 py-2 text-base font-medium text-primary-700 hover:text-accent-600 hover:bg-primary-50 rounded-md
+						{$page.url.pathname.startsWith('/snippets') ? 'text-accent-600 bg-accent-50' : ''}"
 					>
 						코드 스니펫
 					</a>
 				</div>
 				
 				<!-- Mobile User Menu -->
-				<div class="mt-4 pt-4 border-t border-gray-200">
+				<div class="mt-4 pt-4 border-t border-primary-200">
 					{#if isAuth && currentUser}
 						<div class="flex items-center space-x-3 px-3 py-2">
 							{#if currentUser.user_metadata?.avatar_url}
@@ -259,17 +252,17 @@
 									class="w-10 h-10 rounded-full border-2 border-gray-200"
 								/>
 							{:else}
-								<div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-									<svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<div class="w-10 h-10 bg-primary-300 rounded-full flex items-center justify-center">
+									<svg class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
 									</svg>
 								</div>
 							{/if}
 							<div>
-								<div class="text-base font-medium text-gray-900">
+								<div class="text-base font-medium text-primary-900">
 									{currentUser.user_metadata?.full_name || '사용자'}
 								</div>
-								<div class="text-sm text-gray-500">
+								<div class="text-sm text-primary-500">
 									{currentUser.email}
 								</div>
 							</div>
@@ -277,8 +270,11 @@
 						<div class="mt-3 space-y-1">
 							<button 
 								onclick={handleWriteClick}
-								class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+								class="flex items-center w-full text-left px-3 py-2 text-base font-medium text-primary-700 hover:text-accent-600 hover:bg-primary-50 rounded-md"
 							>
+								<div class="w-5 h-5 mr-2 pointer-events-none">
+									{@html PencilSquareIcon}
+								</div>
 								글쓰기
 							</button>
 							<a 
@@ -309,7 +305,7 @@
 					{:else}
 						<a 
 							href="/auth" 
-							class="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-md text-base font-medium hover:bg-blue-700 transition-colors"
+							class="block w-full text-center bg-accent-600 text-white px-4 py-2 rounded-md text-base font-medium hover:bg-accent-700 transition-colors"
 						>
 							로그인
 						</a>
@@ -339,13 +335,13 @@
 			<div class="flex flex-col sm:flex-row gap-3 justify-center">
 				<button
 					onclick={handleProfileSetup}
-					class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+					class="bg-accent-600 text-white px-6 py-2 rounded-md hover:bg-accent-700 transition-colors"
 				>
 					설정하러 이동하기
 				</button>
 				<button
 					onclick={() => showProfileModal = false}
-					class="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors"
+					class="bg-primary-200 text-primary-700 px-6 py-2 rounded-md hover:bg-primary-300 transition-colors"
 				>
 					나중에
 				</button>

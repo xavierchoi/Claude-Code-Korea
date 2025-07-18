@@ -1,3 +1,75 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@theme {
+  /* Anthropic Brand Colors */
+  --color-slate-dark: #191919;
+  --color-slate-medium: #262625;
+  --color-slate-light: #40403E;
+  
+  --color-cloud-dark: #666663;
+  --color-cloud-medium: #91918D;
+  --color-cloud-light: #BFBFBA;
+  
+  --color-ivory-dark: #E5E4DF;
+  --color-ivory-medium: #F0F0EB;
+  --color-ivory-light: #FAFAF7;
+  
+  --color-book-cloth: #CC785C;
+  --color-kraft: #D4A27F;
+  --color-manilla: #EBDBBC;
+  
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+  --color-focus: #61AAF2;
+  --color-error: #BF4D43;
+  
+  --color-primary-50: #FAFAF7;
+  --color-primary-100: #F0F0EB;
+  --color-primary-200: #E5E4DF;
+  --color-primary-300: #BFBFBA;
+  --color-primary-400: #91918D;
+  --color-primary-500: #666663;
+  --color-primary-600: #40403E;
+  --color-primary-700: #262625;
+  --color-primary-800: #191919;
+  --color-primary-900: #000000;
+  
+  --color-accent-50: #F7F3F1;
+  --color-accent-100: #F0E6E1;
+  --color-accent-200: #E2CFC5;
+  --color-accent-300: #EBDBBC;
+  --color-accent-400: #D4A27F;
+  --color-accent-500: #CC785C;
+  --color-accent-600: #B8654B;
+  --color-accent-700: #A35340;
+  --color-accent-800: #8E4134;
+  --color-accent-900: #7A3028;
+  
+  --color-blue-400: #7CB9F2;
+  --color-blue-500: #61AAF2;
+  --color-blue-600: #4A94E0;
+  --color-blue-700: #3B7BC9;
+  
+  --color-red-400: #D16259;
+  --color-red-500: #BF4D43;
+  --color-red-600: #A83D34;
+  --color-red-700: #912F26;
+  
+  --color-green-400: #6BBF59;
+  --color-green-500: #52A340;
+  --color-green-600: #3D8B2E;
+  --color-green-700: #2F7322;
+  
+  --color-gray-50: #FAFAF7;
+  --color-gray-100: #F0F0EB;
+  --color-gray-200: #E5E4DF;
+  --color-gray-300: #BFBFBA;
+  --color-gray-400: #91918D;
+  --color-gray-500: #666663;
+  --color-gray-600: #40403E;
+  --color-gray-700: #262625;
+  --color-gray-800: #191919;
+  --color-gray-900: #000000;
+}
