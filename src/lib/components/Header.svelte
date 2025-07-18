@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation'
 	import { auth, isAuthenticated, user, profile } from '$lib/stores'
 	import { supabase } from '$lib/supabase'
+	import { dev } from '$app/environment'
 	import Modal from './Modal.svelte'
 	import PencilSquareIcon from 'heroicons/24/outline/pencil-square.svg?raw'
 	
@@ -110,6 +111,16 @@
 				>
 					코드 스니펫
 				</a>
+				{#if dev}
+					<a 
+						href="/dev/dummy-users" 
+						class="text-red-600 hover:text-red-800 px-3 py-2 text-sm font-medium transition-colors border border-red-200 rounded-md
+						{$page.url.pathname.startsWith('/dev/dummy-users') ? 'bg-red-50 border-red-300' : ''}"
+						title="개발자 도구 - 더미 사용자 관리"
+					>
+						🔧 DEV
+					</a>
+				{/if}
 			</nav>
 			
 			<!-- Desktop User Menu -->
@@ -239,6 +250,15 @@
 					>
 						코드 스니펫
 					</a>
+					{#if dev}
+						<a 
+							href="/dev/dummy-users" 
+							class="block px-3 py-2 text-base font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md border border-red-200
+							{$page.url.pathname.startsWith('/dev/dummy-users') ? 'text-red-800 bg-red-50 border-red-300' : ''}"
+						>
+							🔧 개발자 도구
+						</a>
+					{/if}
 				</div>
 				
 				<!-- Mobile User Menu -->

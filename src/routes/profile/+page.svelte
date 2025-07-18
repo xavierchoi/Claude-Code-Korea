@@ -568,27 +568,44 @@
 				</div>
 				
 				<!-- Submit Button -->
-				<div class="flex justify-end space-x-3">
-					<a
-						href="/"
-						class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-					>
-						취소
-					</a>
-					<button
-						type="submit"
-						disabled={loading || usernameCheckLoading || (usernameAvailable === false) || ((data.isAdmin || !data.profile?.full_name) && (!formData.full_name || formData.full_name.length < 2 || !/^[가-힣a-zA-Z0-9\s]+$/.test(formData.full_name)))}
-						class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						{#if loading}
-							<div class="flex items-center">
-								<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-								저장 중...
-							</div>
-						{:else}
-							저장하기
+				<div class="flex justify-between items-center">
+					<div>
+						{#if formData.username}
+							<a
+								href="/users/{formData.username}"
+								class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+							>
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+								</svg>
+								프로필 보기
+							</a>
 						{/if}
-					</button>
+					</div>
+					<div class="flex space-x-3">
+						<a
+							href="/"
+							class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+						>
+							취소
+						</a>
+						<button
+							type="submit"
+							disabled={loading || usernameCheckLoading || (usernameAvailable === false) || ((data.isAdmin || !data.profile?.full_name) && (!formData.full_name || formData.full_name.length < 2 || !/^[가-힣a-zA-Z0-9\s]+$/.test(formData.full_name)))}
+							class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{#if loading}
+								<div class="flex items-center">
+									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+									저장 중...
+								</div>
+							{:else}
+								저장하기
+							{/if}
+						</button>
+					</div>
+				</div>
 					</form>
 				</div>
 			</div>
