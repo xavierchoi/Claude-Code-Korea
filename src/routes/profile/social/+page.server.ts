@@ -18,7 +18,6 @@ export const load: PageServerLoad = async (event) => {
       ...session,
       user: user // This user is validated via getUser()
     },
-    profile,
-    isAdmin: session.user.user_metadata?.role === 'admin'
+    profile
   }
 }

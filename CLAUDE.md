@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT: Sound Notification
+
+After finishing responding to my request or running a command, run this command to notify me by sound:
+
+```bash
+afplay /System/Library/Sounds/Funk.aiff
+```
+
 ## Project Overview
 
 This is a SvelteKit application for the Korean Claude developer community platform. It uses TypeScript, Tailwind CSS v4, and Supabase for authentication and data storage. For local development, it uses SQLite with Drizzle ORM.
@@ -129,3 +137,14 @@ Beyond the current `profiles` table, the system will include:
 - Incomplete tasks are marked with `[ ]`
 - When completing a task, update the file by changing `[ ]` to `[x]`
 - The tasks.md file tracks the 20-phase implementation plan for the entire project
+
+## Session Start Guidelines
+
+**IMPORTANT**: Before starting each session, you must:
+
+1. **Read Development Plan**: Read `/cckorea/cckorea-dev-plan.md` to understand the overall development plan
+2. **Read TDD Guidelines**: Read `/cckorea/TDD.md` to understand and follow the test-driven development workflow
+3. **Read Design Specifications**: Read `/Users/internetbasedboy/cckorea/.kiro/specs/claude-code-korea-community/design.md` for design information
+4. **Read Requirements**: Read `/Users/internetbasedboy/cckorea/.kiro/specs/claude-code-korea-community/requirements.md` for detailed requirements
+5. **Check Current Tasks**: Read `/Users/internetbasedboy/cckorea/.kiro/specs/claude-code-korea-community/tasks.md` to identify which tasks to work on
+6. **Update Task Status**: After completing tasks, update the tasks.md file to mark them as completed

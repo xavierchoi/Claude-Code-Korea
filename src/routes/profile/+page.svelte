@@ -31,6 +31,24 @@
 	// Debounced username check
 	let usernameTimeout: NodeJS.Timeout
 	
+	// Profile completion calculation
+	let profileCompletionPercentage = $derived(() => {
+		let completed = 0
+		let total = 6
+		
+		// Required fields (higher weight)
+		if (formData.username) completed++
+		if (formData.full_name && formData.full_name.length >= 2) completed += 2 // 이름은 더 높은 가중치
+		
+		// Optional fields
+		if (formData.bio) completed++
+		if (formData.website || formData.github_username || formData.twitter_username) completed++
+		if (avatarPreview) completed++
+		if (formData.location) completed++
+		
+		return Math.min((completed / total) * 100, 100)
+	})
+	
 	onMount(() => {
 		// Check URL parameters
 		const urlParams = new URLSearchParams($page.url.search)
@@ -163,17 +181,101 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-50 py-12">
-	<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="bg-white shadow rounded-lg">
-			<div class="px-6 py-4 border-b border-gray-200">
-				<h1 class="text-2xl font-bold text-gray-900">프로필 설정</h1>
-				<p class="mt-1 text-sm text-gray-600">
-					다른 사용자들에게 보여질 프로필 정보를 설정하세요.
-				</p>
+<div class="min-h-screen bg-gray-50">
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<!-- Header -->
+		<div class="mb-8">
+			<h1 class="text-3xl font-bold text-gray-900">프로필 관리</h1>
+			<p class="mt-2 text-gray-600">
+				다른 사용자들에게 보여질 프로필 정보를 설정하세요.
+			</p>
+		</div>
+		
+		<div class="lg:grid lg:grid-cols-12 lg:gap-x-8">
+			<!-- Left Sidebar Navigation -->
+			<div class="lg:col-span-3 mb-8 lg:mb-0">
+				<!-- Mobile Tab Navigation -->
+				<div class="lg:hidden">
+					<div class="border-b border-gray-200 mb-8">
+						<nav class="-mb-px flex space-x-6 overflow-x-auto">
+							<a href="/profile" class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+								기본 정보
+							</a>
+							<a href="/profile/career" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+								커리어
+							</a>
+							<a href="/profile/social" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+								소셜 링크
+							</a>
+							<a href="/profile/credentials" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+								이력 및 학력
+							</a>
+							<a href="/profile/account" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+								계정 설정
+							</a>
+							<a href="/profile/notifications" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+								알림 설정
+							</a>
+						</nav>
+					</div>
+				</div>
+				
+				<!-- Desktop Sidebar Navigation -->
+				<div class="hidden lg:block">
+					<nav class="space-y-1">
+						<a href="/profile" class="bg-blue-50 text-blue-700 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+							<svg class="text-blue-500 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+							</svg>
+							기본 정보
+						</a>
+						<a href="/profile/career" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />
+							</svg>
+							커리어
+						</a>
+						<a href="/profile/social" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.102m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+							</svg>
+							소셜 링크
+						</a>
+						<a href="/profile/credentials" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+							</svg>
+							이력 및 학력
+						</a>
+						<a href="/profile/account" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+							</svg>
+							계정 설정
+						</a>
+						<a href="/profile/notifications" class="text-gray-900 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+							<svg class="text-gray-400 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4.868 19.462A17.937 17.937 0 0112 21a17.937 17.937 0 017.132-1.538M6.16 6.16a9 9 0 1011.68 11.68M6.16 6.16L4.16 4.16m2 2L8.16 8.16" />
+							</svg>
+							알림 설정
+						</a>
+					</nav>
+				</div>
 			</div>
 			
-			<form onsubmit={(e) => { e.preventDefault(); updateProfile(); }} class="px-6 py-4 space-y-6">
+			<!-- Main Content -->
+			<div class="lg:col-span-6">
+				<div class="bg-white shadow rounded-lg">
+					<div class="px-6 py-4 border-b border-gray-200">
+						<h2 class="text-xl font-semibold text-gray-900">기본 정보</h2>
+						<p class="mt-1 text-sm text-gray-600">
+							프로필의 기본 정보를 제공해 주세요.
+						</p>
+					</div>
+					
+					<form onsubmit={(e) => { e.preventDefault(); updateProfile(); }} class="px-6 py-6 space-y-6">
 				{#if message}
 					<div class="rounded-md p-4 {messageType === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}">
 						{message}
@@ -260,29 +362,139 @@
 				<!-- Full Name -->
 				<div>
 					<label for="full_name" class="block text-sm font-medium text-gray-700">
-						이름
+						이름 *
+						{#if data.profile?.full_name}
+							<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+								<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+								</svg>
+								설정 완료
+							</span>
+						{/if}
+						{#if data.isAdmin && data.profile?.full_name}
+							<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+								<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+								</svg>
+								관리자 권한
+							</span>
+						{/if}
 					</label>
-					<input
-						type="text"
-						id="full_name"
-						bind:value={formData.full_name}
-						class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-						placeholder="실명을 입력하세요"
-					/>
+					<div class="mt-1 relative">
+						<input
+							type="text"
+							id="full_name"
+							bind:value={formData.full_name}
+							class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 {data.profile?.full_name && !data.isAdmin ? 'bg-gray-50 text-gray-600' : ''}"
+							placeholder={data.profile?.full_name && !data.isAdmin ? '이름이 설정되어 변경할 수 없습니다' : '커뮤니티에서 사용될 이름을 입력하세요'}
+							required
+							minlength="2"
+							maxlength="20"
+							pattern="^[가-힣a-zA-Z0-9\s]+$"
+							disabled={!!data.profile?.full_name && !data.isAdmin}
+							readonly={!!data.profile?.full_name && !data.isAdmin}
+						/>
+						{#if !data.profile?.full_name || data.isAdmin}
+							<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+								<span class="text-sm text-gray-500">
+									{formData.full_name.length}/20
+								</span>
+							</div>
+						{:else}
+							<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+								<svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+								</svg>
+							</div>
+						{/if}
+					</div>
+					
+					{#if data.profile?.full_name && !data.isAdmin}
+						<div class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+							<div class="flex">
+								<div class="flex-shrink-0">
+									<svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+									</svg>
+								</div>
+								<div class="ml-3">
+									<p class="text-sm text-amber-800">
+										<strong>이름 변경 불가 안내</strong><br>
+										이름은 커뮤니티 내에서 사용자를 식별하는 중요한 정보로, 한 번 설정하면 변경할 수 없습니다. 
+										신중하게 선택해 주세요.
+									</p>
+								</div>
+							</div>
+						</div>
+					{:else if data.profile?.full_name && data.isAdmin}
+						<div class="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-md">
+							<div class="flex">
+								<div class="flex-shrink-0">
+									<svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+									</svg>
+								</div>
+								<div class="ml-3">
+									<p class="text-sm text-purple-800">
+										<strong>관리자 권한 안내</strong><br>
+										관리자 권한으로 이름을 변경할 수 있습니다. 사용자 지원이나 정책상 필요한 경우에만 사용해 주세요.
+									</p>
+								</div>
+							</div>
+						</div>
+					{:else}
+						<p class="mt-1 text-sm text-gray-500">
+							다른 사용자들에게 표시될 이름입니다. 한글, 영문, 숫자만 사용 가능합니다. (2-20자)
+						</p>
+						<div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+							<div class="flex">
+								<div class="flex-shrink-0">
+									<svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+									</svg>
+								</div>
+								<div class="ml-3">
+									<p class="text-sm text-blue-800">
+										<strong>중요:</strong> 이름은 한 번 설정하면 변경할 수 없습니다. 
+										신중하게 입력해 주세요.
+									</p>
+								</div>
+							</div>
+						</div>
+						
+						{#if formData.full_name.length > 0 && formData.full_name.length < 2}
+							<p class="mt-1 text-sm text-red-600">이름은 최소 2자 이상 입력해주세요.</p>
+						{/if}
+						{#if formData.full_name.length > 20}
+							<p class="mt-1 text-sm text-red-600">이름은 최대 20자까지 입력 가능합니다.</p>
+						{/if}
+						{#if formData.full_name && !/^[가-힣a-zA-Z0-9\s]+$/.test(formData.full_name)}
+							<p class="mt-1 text-sm text-red-600">한글, 영문, 숫자만 사용할 수 있습니다.</p>
+						{/if}
+					{/if}
 				</div>
 				
 				<!-- Bio -->
 				<div>
-					<label for="bio" class="block text-sm font-medium text-gray-700">
-						자기소개
-					</label>
+					<div class="flex justify-between items-center mb-1">
+						<label for="bio" class="block text-sm font-medium text-gray-700">
+							자기소개
+						</label>
+						<span class="text-sm text-gray-500">
+							{formData.bio.length}/500
+						</span>
+					</div>
 					<textarea
 						id="bio"
 						bind:value={formData.bio}
-						rows="3"
+						rows="4"
+						maxlength="500"
 						class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
 						placeholder="자신을 소개해주세요"
 					></textarea>
+					<p class="mt-1 text-sm text-gray-500">
+						한 줄 소개를 입력해주세요. 최대 500자까지 입력할 수 있습니다.
+					</p>
 				</div>
 				
 				<!-- Website -->
@@ -351,7 +563,7 @@
 					</a>
 					<button
 						type="submit"
-						disabled={loading || usernameCheckLoading || (usernameAvailable === false)}
+						disabled={loading || usernameCheckLoading || (usernameAvailable === false) || ((data.isAdmin || !data.profile?.full_name) && (!formData.full_name || formData.full_name.length < 2 || !/^[가-힣a-zA-Z0-9\s]+$/.test(formData.full_name)))}
 						class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						{#if loading}
@@ -363,8 +575,122 @@
 							저장하기
 						{/if}
 					</button>
+					</form>
 				</div>
-			</form>
+			</div>
+			
+			<!-- Right Sidebar -->
+			<div class="lg:col-span-3 mt-8 lg:mt-0">
+				<div class="space-y-6">
+					<!-- Profile Completion -->
+					<div class="bg-white shadow rounded-lg p-6">
+						<div class="flex items-center justify-between mb-4">
+							<h3 class="text-lg font-semibold text-gray-900">프로필 완성도</h3>
+							<span class="text-2xl font-bold text-gray-900">{Math.round(profileCompletionPercentage())}%</span>
+						</div>
+						
+						<div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+							<div 
+								class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+								style="width: {profileCompletionPercentage()}%"
+							></div>
+						</div>
+						
+						<p class="text-sm text-gray-600 mb-6">
+							프로필 완성도가 높을수록 다른 사용자들에게 더 많은 정보를 제공할 수 있습니다.
+						</p>
+						
+						<div class="space-y-3">
+							<div class="flex items-center">
+								<div class="flex-shrink-0 w-5 h-5 mr-3">
+									{#if formData.username}
+										<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{:else}
+										<svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{/if}
+								</div>
+								<span class="text-sm font-medium {formData.username ? 'text-gray-900' : 'text-gray-500'}">
+									기본 정보
+								</span>
+							</div>
+							
+							<div class="flex items-center">
+								<div class="flex-shrink-0 w-5 h-5 mr-3">
+									{#if formData.full_name && formData.bio}
+										<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{:else}
+										<svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{/if}
+								</div>
+								<span class="text-sm font-medium {formData.full_name && formData.bio ? 'text-gray-900' : 'text-gray-500'}">
+									개인 정보
+								</span>
+							</div>
+							
+							<div class="flex items-center">
+								<div class="flex-shrink-0 w-5 h-5 mr-3">
+									{#if formData.website || formData.github_username || formData.twitter_username}
+										<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{:else}
+										<svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{/if}
+								</div>
+								<span class="text-sm font-medium {formData.website || formData.github_username || formData.twitter_username ? 'text-gray-900' : 'text-gray-500'}">
+									링크
+								</span>
+							</div>
+							
+							<div class="flex items-center">
+								<div class="flex-shrink-0 w-5 h-5 mr-3">
+									{#if avatarPreview}
+										<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{:else}
+										<svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+										</svg>
+									{/if}
+								</div>
+								<span class="text-sm font-medium {avatarPreview ? 'text-gray-900' : 'text-gray-500'}">
+									프로필 사진
+								</span>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Additional Tools -->
+					<div class="bg-white shadow rounded-lg p-6">
+						<h3 class="text-lg font-semibold text-gray-900 mb-4">추가 도구</h3>
+						<div class="space-y-3">
+							<button class="w-full bg-gray-900 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+								<svg class="w-4 h-4 mr-2 inline-block" fill="currentColor" viewBox="0 0 20 20">
+									<path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" />
+								</svg>
+								이력서 PDF 다운로드
+							</button>
+							<button class="w-full bg-white text-gray-700 py-2 px-4 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors">
+								<svg class="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+								</svg>
+								프로필 공유
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
