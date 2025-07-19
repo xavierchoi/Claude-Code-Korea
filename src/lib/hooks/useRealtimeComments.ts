@@ -1,4 +1,5 @@
 import { onDestroy } from 'svelte'
+import { get } from 'svelte/store'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { commentStore } from '$lib/stores/comments'
 import type { CommentWithAuthor } from '$lib/types/comment'
@@ -12,9 +13,15 @@ interface RealtimeCommentOptions {
 export function useRealtimeComments({ supabase, postId, onError }: RealtimeCommentOptions) {
 	let isSubscribed = false
 	
-	// 초기 댓글 로드
+	// 초기 댓글 로드 (store가 비어있을 때만)
 	async function loadComments() {
 		try {
+			// 이미 댓글이 있으면 다시 로드하지 않음
+			const currentStore = get(commentStore)
+			if (currentStore.comments.length > 0) {
+				return
+			}
+			
 			const { data: comments, error } = await supabase
 				.from('comments')
 				.select(`

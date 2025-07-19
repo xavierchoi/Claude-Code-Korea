@@ -18,6 +18,8 @@ function createCommentStore() {
 
 	return {
 		subscribe,
+		set,
+		update,
 		
 		// 댓글 목록 설정
 		setComments: (comments: CommentWithAuthor[]) => {

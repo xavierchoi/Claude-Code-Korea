@@ -13,13 +13,18 @@ marked.setOptions({
 const renderer = new marked.Renderer();
 
 // 코드 블록 스타일링
-renderer.code = (code, language) => {
-	const validLanguage = language || 'plaintext';
-	return `<pre><code class="language-${validLanguage}">${code}</code></pre>`;
+renderer.code = ({ text, lang }) => {
+	const validLanguage = lang || 'plaintext';
+	return `<pre><code class="language-${validLanguage}">${text}</code></pre>`;
 };
 
 // 링크를 새 탭에서 열기
-renderer.link = (href, title, text) => {
+renderer.link = ({ href, title, text }) => {
+	// href가 문자열인지 확인
+	if (!href || typeof href !== 'string') {
+		return text || '';
+	}
+	
 	const titleAttr = title ? ` title="${title}"` : '';
 	const isExternal = href.startsWith('http') && !href.includes(window.location.hostname);
 	const targetAttr = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
@@ -27,17 +32,22 @@ renderer.link = (href, title, text) => {
 };
 
 // 이미지 반응형 처리
-renderer.image = (href, title, text) => {
+renderer.image = ({ href, title, text }) => {
+	// href가 문자열인지 확인
+	if (!href || typeof href !== 'string') {
+		return '';
+	}
+	
 	const titleAttr = title ? ` title="${title}"` : '';
-	return `<img src="${href}" alt="${text}"${titleAttr} loading="lazy" class="max-w-full h-auto rounded-lg my-4">`;
+	return `<img src="${href}" alt="${text || ''}"${titleAttr} loading="lazy" class="max-w-full h-auto rounded-lg my-4">`;
 };
 
 // 테이블 스타일링
-renderer.table = (header, body) => {
+renderer.table = ({ header, rows }) => {
 	return `<div class="overflow-x-auto my-4">
 		<table class="min-w-full divide-y divide-gray-300">
 			<thead class="bg-gray-50">${header}</thead>
-			<tbody class="bg-white divide-y divide-gray-200">${body}</tbody>
+			<tbody class="bg-white divide-y divide-gray-200">${rows}</tbody>
 		</table>
 	</div>`;
 };

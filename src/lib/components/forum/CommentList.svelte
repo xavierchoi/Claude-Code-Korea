@@ -19,12 +19,34 @@
 	// Supabase 클라이언트 가져오기
 	const supabase = getContext<SupabaseClient>('supabase')
 	
+	// 초기 댓글이 있으면 store에 설정
+	let storeInitialized = false
+	
 	// 실시간 댓글 구독 설정
 	const { commentStore } = useRealtimeComments({
 		supabase,
 		postId,
 		onError: (error) => {
 			console.error('Realtime comment error:', error)
+		}
+	})
+	
+	// 초기 댓글 설정 (한 번만 실행)
+	$effect(() => {
+		if (!storeInitialized && initialComments && initialComments.length > 0) {
+			// initialComments가 이미 계층 구조인지 확인
+			if (initialComments[0] && 'replies' in initialComments[0]) {
+				// 이미 계층 구조로 되어있으면 직접 설정
+				commentStore.set({
+					comments: initialComments as CommentWithReplies[],
+					totalCount: countAllComments(initialComments as CommentWithReplies[]),
+					channel: null
+				})
+			} else {
+				// 플랫 배열이면 setComments 사용
+				commentStore.setComments(initialComments)
+			}
+			storeInitialized = true
 		}
 	})
 	
@@ -106,6 +128,7 @@
 					{postId} 
 					{currentUserId}
 					{isAdmin}
+					level={0}
 				/>
 			{/each}
 		{/if}
