@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { CommentWithReplies } from '$lib/types/comment'
 	import { onMount } from 'svelte'
+	import { toast } from '$lib/stores/toast'
+	import { invalidateAll } from '$app/navigation'
 	
 	interface Props {
 		comment: CommentWithReplies
@@ -11,6 +13,15 @@
 	}
 	
 	let { comment, level = 0, postId, currentUserId, isAdmin = false }: Props = $props()
+	
+	// 프로필 이미지 디버깅
+	$effect(() => {
+		console.log('Comment author info:', {
+			username: comment.author?.username,
+			avatar_url: comment.author?.avatar_url,
+			full_name: comment.author?.full_name
+		})
+	})
 	
 	// 날짜 포맷팅
 	function formatDate(dateString: string) {
@@ -43,6 +54,12 @@
 	let isEditing = $state(false)
 	let editContent = $state(comment.content)
 	let isDeleting = $state(false)
+	let imageError = $state(false)
+	
+	function handleImageError() {
+		console.log('Image load error for:', comment.author.avatar_url)
+		imageError = true
+	}
 	
 	async function submitReply() {
 		if (!replyContent.trim() || isSubmitting) return
@@ -61,17 +78,57 @@
 			})
 			
 			if (response.ok) {
+				const result = await response.json()
+				const newReplyId = result.comment?.id
+				
 				// 실시간 업데이트가 자동으로 처리
 				showReplyForm = false
 				replyContent = ''
 				isEditing = false
 				editContent = comment.content
+				toast.success('답글이 작성되었습니다.')
+				
+				// 페이지 데이터 새로고침 후 스크롤
+				setTimeout(async () => {
+					console.log('Starting invalidateAll for new reply:', newReplyId)
+					await invalidateAll()
+					
+					// DOM 업데이트를 위한 추가 대기
+					setTimeout(() => {
+						if (newReplyId) {
+							const element = document.getElementById(`comment-${newReplyId}`)
+							console.log('Looking for reply element:', `comment-${newReplyId}`, element)
+							
+							if (element) {
+								element.scrollIntoView({ 
+									behavior: 'smooth', 
+									block: 'center' 
+								})
+								element.classList.add('highlight')
+								
+								setTimeout(() => {
+									element.classList.remove('highlight')
+								}, 2000)
+							} else {
+								// 재시도
+								setTimeout(() => {
+									const retryElement = document.getElementById(`comment-${newReplyId}`)
+									if (retryElement) {
+										retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+										retryElement.classList.add('highlight')
+										setTimeout(() => retryElement.classList.remove('highlight'), 2000)
+									}
+								}, 500)
+							}
+						}
+					}, 300)
+				}, 500)
 			} else {
 				const error = await response.json()
-				alert(error.error || '댓글 작성에 실패했습니다.')
+				toast.error(error.error || '댓글 작성에 실패했습니다.')
 			}
 		} catch (err) {
-			alert('댓글 작성 중 오류가 발생했습니다.')
+			toast.error('댓글 작성 중 오류가 발생했습니다.')
 		} finally {
 			isSubmitting = false
 		}
@@ -98,12 +155,18 @@
 				replyContent = ''
 				isEditing = false
 				editContent = comment.content
+				toast.success('댓글이 수정되었습니다.')
+				
+				// 페이지 데이터 새로고침
+				setTimeout(() => {
+					invalidateAll()
+				}, 500)
 			} else {
 				const error = await response.json()
-				alert(error.error || '댓글 수정에 실패했습니다.')
+				toast.error(error.error || '댓글 수정에 실패했습니다.')
 			}
 		} catch (err) {
-			alert('댓글 수정 중 오류가 발생했습니다.')
+			toast.error('댓글 수정 중 오류가 발생했습니다.')
 		} finally {
 			isSubmitting = false
 		}
@@ -124,25 +187,36 @@
 				replyContent = ''
 				isEditing = false
 				editContent = comment.content
+				
+				// 성공 메시지 표시
+				toast.success('댓글이 삭제되었습니다.')
+				
+				// 페이지 데이터 새로고침 (부드러운 리로드)
+				setTimeout(() => {
+					invalidateAll()
+				}, 500)
 			} else {
 				const error = await response.json()
-				alert(error.error || '댓글 삭제에 실패했습니다.')
+				toast.error(error.error || '댓글 삭제에 실패했습니다.')
 			}
 		} catch (err) {
-			alert('댓글 삭제 중 오류가 발생했습니다.')
+			toast.error('댓글 삭제 중 오류가 발생했습니다.')
 		} finally {
 			isDeleting = false
 		}
 	}
 </script>
 
-<div class="comment-item" style="margin-left: {level * 20}px;">
+<div class="comment-item" id="comment-{comment.id}" style="margin-left: {level * 20}px;">
 	<div class="comment-header">
 		<div class="author-info">
 			<img 
-				src={comment.author.avatar_url || `https://ui-avatars.com/api/?name=${comment.author.username}&background=6366f1&color=fff`} 
-				alt={comment.author.username}
+				src={imageError || !comment.author.avatar_url 
+					? `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author.username || 'Unknown')}&background=6366f1&color=fff` 
+					: comment.author.avatar_url} 
+				alt={comment.author.username || 'Unknown'}
 				class="author-avatar"
+				onerror={handleImageError}
 			/>
 			<span class="author-name">{comment.author.username}</span>
 		</div>
@@ -164,6 +238,12 @@
 					bind:value={editContent}
 					rows="3"
 					disabled={isSubmitting}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+							e.preventDefault()
+							updateComment()
+						}
+					}}
 				></textarea>
 				<div class="edit-actions">
 					<button 
@@ -226,6 +306,12 @@
 				placeholder="답글을 입력하세요..."
 				rows="3"
 				disabled={isSubmitting}
+				onkeydown={(e) => {
+					if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+						e.preventDefault()
+						submitReply()
+					}
+				}}
 			></textarea>
 			<div class="reply-actions">
 				<button 
@@ -267,6 +353,16 @@
 	.comment-item {
 		border-bottom: 1px solid #e5e7eb;
 		padding: 1rem 0;
+		transition: all 0.3s ease;
+		scroll-margin-top: 100px;
+	}
+	
+	:global(.comment-item.highlight) {
+		background-color: #fef3c7 !important;
+		padding: 1rem !important;
+		border-radius: 0.5rem !important;
+		border: 1px solid #f59e0b !important;
+		box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
 	}
 	
 	.comment-header {

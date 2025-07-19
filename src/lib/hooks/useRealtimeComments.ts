@@ -13,15 +13,9 @@ interface RealtimeCommentOptions {
 export function useRealtimeComments({ supabase, postId, onError }: RealtimeCommentOptions) {
 	let isSubscribed = false
 	
-	// 초기 댓글 로드 (store가 비어있을 때만)
+	// 초기 댓글 로드
 	async function loadComments() {
 		try {
-			// 이미 댓글이 있으면 다시 로드하지 않음
-			const currentStore = get(commentStore)
-			if (currentStore.comments.length > 0) {
-				return
-			}
-			
 			const { data: comments, error } = await supabase
 				.from('comments')
 				.select(`
@@ -51,8 +45,21 @@ export function useRealtimeComments({ supabase, postId, onError }: RealtimeComme
 	function subscribe() {
 		if (isSubscribed) return
 		
+		console.log(`Setting up realtime subscription for post: ${postId}`)
+		
 		const channel = supabase
 			.channel(`comments:post_id=eq.${postId}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'comments'
+				},
+				(payload) => {
+					console.log('Any comment event received:', payload)
+				}
+			)
 			.on(
 				'postgres_changes',
 				{
@@ -62,7 +69,10 @@ export function useRealtimeComments({ supabase, postId, onError }: RealtimeComme
 					filter: `post_id=eq.${postId}`
 				},
 				async (payload) => {
-					console.log('New comment:', payload)
+					console.log('New comment received:', payload)
+					console.log('Comment ID from payload:', payload.new.id)
+					console.log('Comment content from payload:', payload.new.content)
+					console.log('Post ID from payload:', payload.new.post_id)
 					
 					// 작성자 정보를 포함한 전체 댓글 데이터 가져오기
 					const { data: comment, error } = await supabase
@@ -79,8 +89,15 @@ export function useRealtimeComments({ supabase, postId, onError }: RealtimeComme
 						.eq('id', payload.new.id)
 						.single()
 					
-					if (!error && comment) {
+					console.log('Fetch comment result:', { comment, error })
+					
+					if (error) {
+						console.error('Failed to fetch comment author:', error)
+					} else if (comment) {
+						console.log('Adding comment to store:', comment)
 						commentStore.addComment(comment)
+					} else {
+						console.error('Comment data is null')
 					}
 				}
 			)
@@ -129,9 +146,10 @@ export function useRealtimeComments({ supabase, postId, onError }: RealtimeComme
 				}
 			)
 			.subscribe((status) => {
-				console.log('Realtime subscription status:', status)
+				console.log(`Realtime subscription status for post ${postId}:`, status)
 				if (status === 'SUBSCRIBED') {
 					isSubscribed = true
+					console.log(`Successfully subscribed to comments for post ${postId}`)
 				}
 			})
 		
@@ -144,8 +162,7 @@ export function useRealtimeComments({ supabase, postId, onError }: RealtimeComme
 		isSubscribed = false
 	}
 	
-	// 컴포넌트 마운트 시 실행
-	loadComments()
+	// 실시간 구독만 시작 (초기 로드는 CommentList에서 처리)
 	subscribe()
 	
 	// 컴포넌트 언마운트 시 정리

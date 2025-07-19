@@ -7,6 +7,93 @@
 
 ## [출시 예정]
 
+## [1.6.3] - 2025-07-19
+
+### 수정됨
+- 관리자 자기 댓글 삭제 버그 수정
+  - 관리자도 RLS 정책의 영향을 받아 자신의 댓글 삭제 불가 문제
+  - 관리자는 항상 admin_delete_comment RPC 사용하도록 변경
+- 인증 시스템 트리거 오류 수정
+  - "relation 'profiles' does not exist" 오류 해결
+  - 트리거에 포괄적 에러 처리 및 search_path 명시
+  - 인증 프로세스가 프로필 생성 실패 시에도 중단되지 않도록 개선
+- 관리자 댓글 삭제 권한 RLS 정책 수정
+  - UPDATE 정책에 WITH CHECK 절 추가
+  - 관리자 전용 소프트 삭제 정책 추가
+  - INSERT 정책에서 is_deleted 제약 제거
+  - RLS 문제 해결을 위해 admin_delete_comment RPC 함수 추가
+
+### 추가됨
+- 토스트 알림 시스템 구현
+  - 댓글 작성/수정/삭제 시 성공/실패 알림 표시
+  - 우측 상단에 슬라이드 애니메이션으로 표시
+  - 3초 후 자동 사라짐, 수동 닫기 가능
+  - 성공/오류/정보 타입별 스타일링
+- 댓글 작성 후 자동 스크롤 및 하이라이트
+  - 새 댓글/답글 작성 시 해당 위치로 부드러운 스크롤
+  - 2초간 노란색 하이라이트 효과로 시각적 피드백
+  - scroll-margin-top으로 헤더와 겹치지 않도록 처리
+- 키보드 단축키로 댓글 작성/수정
+  - Windows: Ctrl + Enter
+  - macOS: Cmd + Enter
+  - 댓글 작성, 답글 작성, 댓글 수정 모두 지원
+
+### 기술적 개선
+- 트리거 안정성 대폭 향상 (handle_new_user, sync_user_admin_status)
+- RLS 정책 완전성 개선 (USING과 WITH CHECK 모두 구현)
+- 댓글 삭제 후 invalidateAll()로 부드러운 데이터 새로고침
+
+## [1.6.2] - 2025-07-19
+
+### 추가됨
+- 관리자 댓글 관리 권한 강화
+  - 관리자는 모든 사용자의 댓글을 수정 및 삭제 가능
+  - API 엔드포인트 레벨에서 관리자 권한 체크 구현
+  - 소프트 삭제(soft delete) 기능 추가 (is_deleted, deleted_at 필드)
+  - 삭제된 댓글은 RLS 정책에 의해 자동으로 필터링
+
+### 기술적 개선
+- 댓글 API 엔드포인트 추가 (/api/comments/[id])
+  - PUT: 댓글 수정 (작성자 또는 관리자만 가능)
+  - DELETE: 댓글 삭제 (작성자 또는 관리자만 가능)
+- 댓글 테이블에 소프트 삭제 컬럼 추가
+- RLS 정책 업데이트로 삭제된 댓글 자동 필터링
+- hooks.server.ts에 authHandle 추가하여 locals.user 설정
+- app.d.ts에 locals.user 타입 정의 추가
+- profiles 테이블에 is_admin 컬럼 추가
+  - user_metadata.role과 자동 동기화되는 트리거 추가
+  - 관리자 권한 체크를 위한 인덱스 추가
+
+### 수정됨
+- API 라우트 충돌 해결 ([comment_id] → [id])
+- 테스트 파일을 새로운 API 구조에 맞게 업데이트
+- 프로필 사진 로딩 오류 수정
+  - Supabase Storage avatars 버킷을 public으로 설정
+  - 이미지 로드 실패 시 대체 이미지 표시 로직 개선
+  - URL 인코딩 처리 추가
+- Svelte 5 이벤트 핸들러 문법 오류 수정
+  - on:error를 onerror로 변경 (새로운 문법 적용)
+- 관리자 댓글 삭제 권한 문제 수정
+  - RLS UPDATE 정책에 관리자 권한 추가
+  - 소프트 삭제 시 실시간 업데이트로 화면에서 즉시 제거
+  - 디버깅 로그 추가로 문제 진단 개선
+
+## [1.6.1] - 2025-07-19
+
+### 수정됨
+- 실시간 댓글 업데이트 문제 해결
+  - Supabase Realtime Publication 설정 누락 문제 수정
+  - comments, posts, likes, follows, notifications 테이블을 supabase_realtime publication에 추가
+  - 댓글 작성 후 실시간 반영이 정상적으로 작동하도록 수정
+  - 중복 댓글 방지 로직 추가
+  - 실시간 구독 상태 로깅 개선
+
+### 기술적 개선
+- 실시간 댓글 시스템 안정성 향상
+- Supabase Realtime 설정 마이그레이션 파일 추가
+- 디버깅을 위한 상세 로깅 추가
+- Svelte 5 호환성 개선 (이벤트 핸들러, $state 사용)
+
 ## [1.6.0] - 2025-07-19
 
 ### 추가됨

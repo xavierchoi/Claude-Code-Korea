@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { GET, POST } from '../../../routes/api/posts/[post_id]/comments/+server'
-import { PUT, DELETE } from '../../../routes/api/comments/[comment_id]/+server'
+import { PUT, DELETE } from '../../../routes/api/comments/[id]/+server'
 import type { RequestEvent } from '@sveltejs/kit'
 
 describe('GET /api/posts/[post_id]/comments', () => {
@@ -237,7 +237,7 @@ describe('POST /api/posts/[post_id]/comments', () => {
 	})
 })
 
-describe('PUT /api/comments/[comment_id]', () => {
+describe('PUT /api/comments/[id]', () => {
 	it('should update a comment when user is the author', async () => {
 		// Arrange
 		const mockCommentId = 'test-comment-id'
@@ -257,34 +257,48 @@ describe('PUT /api/comments/[comment_id]', () => {
 		}
 		
 		const mockEvent = {
-			params: { comment_id: mockCommentId },
+			params: { id: mockCommentId },
 			request: {
 				json: vi.fn().mockResolvedValue(mockUpdateData)
 			},
 			locals: {
-				safeGetSession: vi.fn().mockResolvedValue({
-					session: { user: { id: mockUserId } }
-				}),
+				user: { id: mockUserId },
 				supabase: {
-					from: vi.fn().mockReturnValue({
-						select: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
-								single: vi.fn().mockResolvedValue({
-									data: { id: mockCommentId, author_id: mockUserId },
-									error: null
-								})
-							})
-						}),
-						update: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
+					from: vi.fn().mockImplementation((table) => {
+						if (table === 'comments') {
+							return {
 								select: vi.fn().mockReturnValue({
-									single: vi.fn().mockResolvedValue({
-										data: mockUpdatedComment,
-										error: null
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { id: mockCommentId, author_id: mockUserId },
+											error: null
+										})
+									})
+								}),
+								update: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										select: vi.fn().mockReturnValue({
+											single: vi.fn().mockResolvedValue({
+												data: mockUpdatedComment,
+												error: null
+											})
+										})
 									})
 								})
-							})
-						})
+							}
+						}
+						if (table === 'profiles') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { is_admin: false },
+											error: null
+										})
+									})
+								})
+							}
+						}
 					})
 				}
 			}
@@ -304,24 +318,38 @@ describe('PUT /api/comments/[comment_id]', () => {
 	it('should not allow updating comment by non-author', async () => {
 		// Arrange
 		const mockEvent = {
-			params: { comment_id: 'test-comment-id' },
+			params: { id: 'test-comment-id' },
 			request: {
 				json: vi.fn().mockResolvedValue({ content: 'Test' })
 			},
 			locals: {
-				safeGetSession: vi.fn().mockResolvedValue({
-					session: { user: { id: 'different-user-id' } }
-				}),
+				user: { id: 'different-user-id' },
 				supabase: {
-					from: vi.fn().mockReturnValue({
-						select: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
-								single: vi.fn().mockResolvedValue({
-									data: { id: 'test-comment-id', author_id: 'original-author-id' },
-									error: null
+					from: vi.fn().mockImplementation((table) => {
+						if (table === 'comments') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { id: 'test-comment-id', author_id: 'original-author-id' },
+											error: null
+										})
+									})
 								})
-							})
-						})
+							}
+						}
+						if (table === 'profiles') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { is_admin: false },
+											error: null
+										})
+									})
+								})
+							}
+						}
 					})
 				}
 			}
@@ -355,39 +383,48 @@ describe('PUT /api/comments/[comment_id]', () => {
 		}
 		
 		const mockEvent = {
-			params: { comment_id: mockCommentId },
+			params: { id: mockCommentId },
 			request: {
 				json: vi.fn().mockResolvedValue(mockUpdateData)
 			},
 			locals: {
-				safeGetSession: vi.fn().mockResolvedValue({
-					session: { 
-						user: { 
-							id: mockAdminId,
-							user_metadata: { role: 'admin' }
-						} 
-					}
-				}),
+				user: { id: mockAdminId },
 				supabase: {
-					from: vi.fn().mockReturnValue({
-						select: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
-								single: vi.fn().mockResolvedValue({
-									data: { id: mockCommentId, author_id: 'original-author-id' },
-									error: null
-								})
-							})
-						}),
-						update: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
+					from: vi.fn().mockImplementation((table) => {
+						if (table === 'comments') {
+							return {
 								select: vi.fn().mockReturnValue({
-									single: vi.fn().mockResolvedValue({
-										data: mockUpdatedComment,
-										error: null
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { id: mockCommentId, author_id: 'original-author-id' },
+											error: null
+										})
+									})
+								}),
+								update: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										select: vi.fn().mockReturnValue({
+											single: vi.fn().mockResolvedValue({
+												data: mockUpdatedComment,
+												error: null
+											})
+										})
 									})
 								})
-							})
-						})
+							}
+						}
+						if (table === 'profiles') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { is_admin: true },
+											error: null
+										})
+									})
+								})
+							}
+						}
 					})
 				}
 			}
@@ -404,7 +441,7 @@ describe('PUT /api/comments/[comment_id]', () => {
 	})
 })
 
-describe('DELETE /api/comments/[comment_id]', () => {
+describe('DELETE /api/comments/[id]', () => {
 	it('should delete a comment when user is the author', async () => {
 		// Arrange
 		const mockCommentId = 'test-comment-id'
@@ -412,35 +449,44 @@ describe('DELETE /api/comments/[comment_id]', () => {
 		const mockPostId = 'test-post-id'
 		
 		const mockEvent = {
-			params: { comment_id: mockCommentId },
+			params: { id: mockCommentId },
 			locals: {
-				safeGetSession: vi.fn().mockResolvedValue({
-					session: { user: { id: mockUserId } }
-				}),
+				user: { id: mockUserId },
 				supabase: {
-					from: vi.fn().mockReturnValue({
-						select: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
-								single: vi.fn().mockResolvedValue({
-									data: { 
-										id: mockCommentId, 
-										author_id: mockUserId,
-										post_id: mockPostId 
-									},
-									error: null
+					from: vi.fn().mockImplementation((table) => {
+						if (table === 'comments') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { 
+												id: mockCommentId, 
+												author_id: mockUserId,
+												post_id: mockPostId 
+											},
+											error: null
+										})
+									})
+								}),
+								update: vi.fn().mockReturnValue({
+									eq: vi.fn().mockResolvedValue({
+										error: null
+									})
 								})
-							})
-						}),
-						delete: vi.fn().mockReturnValue({
-							eq: vi.fn().mockResolvedValue({
-								error: null
-							})
-						}),
-						update: vi.fn().mockReturnValue({
-							eq: vi.fn().mockResolvedValue({
-								error: null
-							})
-						})
+							}
+						}
+						if (table === 'profiles') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { is_admin: false },
+											error: null
+										})
+									})
+								})
+							}
+						}
 					})
 				}
 			}
@@ -458,21 +504,35 @@ describe('DELETE /api/comments/[comment_id]', () => {
 	it('should not allow deleting comment by non-author', async () => {
 		// Arrange
 		const mockEvent = {
-			params: { comment_id: 'test-comment-id' },
+			params: { id: 'test-comment-id' },
 			locals: {
-				safeGetSession: vi.fn().mockResolvedValue({
-					session: { user: { id: 'different-user-id' } }
-				}),
+				user: { id: 'different-user-id' },
 				supabase: {
-					from: vi.fn().mockReturnValue({
-						select: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
-								single: vi.fn().mockResolvedValue({
-									data: { id: 'test-comment-id', author_id: 'original-author-id' },
-									error: null
+					from: vi.fn().mockImplementation((table) => {
+						if (table === 'comments') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { id: 'test-comment-id', author_id: 'original-author-id' },
+											error: null
+										})
+									})
 								})
-							})
-						})
+							}
+						}
+						if (table === 'profiles') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { is_admin: false },
+											error: null
+										})
+									})
+								})
+							}
+						}
 					})
 				}
 			}
@@ -494,40 +554,44 @@ describe('DELETE /api/comments/[comment_id]', () => {
 		const mockPostId = 'test-post-id'
 		
 		const mockEvent = {
-			params: { comment_id: mockCommentId },
+			params: { id: mockCommentId },
 			locals: {
-				safeGetSession: vi.fn().mockResolvedValue({
-					session: { 
-						user: { 
-							id: mockAdminId,
-							user_metadata: { role: 'admin' }
-						} 
-					}
-				}),
+				user: { id: mockAdminId },
 				supabase: {
-					from: vi.fn().mockReturnValue({
-						select: vi.fn().mockReturnValue({
-							eq: vi.fn().mockReturnValue({
-								single: vi.fn().mockResolvedValue({
-									data: { 
-										id: mockCommentId, 
-										author_id: 'original-author-id',
-										post_id: mockPostId 
-									},
-									error: null
+					from: vi.fn().mockImplementation((table) => {
+						if (table === 'comments') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { 
+												id: mockCommentId, 
+												author_id: 'original-author-id',
+												post_id: mockPostId 
+											},
+											error: null
+										})
+									})
+								}),
+								update: vi.fn().mockReturnValue({
+									eq: vi.fn().mockResolvedValue({
+										error: null
+									})
 								})
-							})
-						}),
-						delete: vi.fn().mockReturnValue({
-							eq: vi.fn().mockResolvedValue({
-								error: null
-							})
-						}),
-						update: vi.fn().mockReturnValue({
-							eq: vi.fn().mockResolvedValue({
-								error: null
-							})
-						})
+							}
+						}
+						if (table === 'profiles') {
+							return {
+								select: vi.fn().mockReturnValue({
+									eq: vi.fn().mockReturnValue({
+										single: vi.fn().mockResolvedValue({
+											data: { is_admin: true },
+											error: null
+										})
+									})
+								})
+							}
+						}
 					})
 				}
 			}

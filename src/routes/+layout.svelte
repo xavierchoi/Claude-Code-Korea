@@ -6,6 +6,7 @@
 	import { auth, profile } from '$lib/stores'
 	import Header from '$lib/components/Header.svelte'
 	import Footer from '$lib/components/Footer.svelte'
+	import Toast from '$lib/components/ui/Toast.svelte'
 
 	let { children, data } = $props();
 	
@@ -56,4 +57,7 @@
 	</main>
 	
 	<Footer />
+	
+	<!-- Toast notifications -->
+	<Toast />
 </div>

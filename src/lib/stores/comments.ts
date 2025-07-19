@@ -33,11 +33,21 @@ function createCommentStore() {
 		
 		// 새 댓글 추가
 		addComment: (comment: CommentWithAuthor) => {
+			console.log('Adding comment to store:', comment.id, comment.content.substring(0, 50))
 			update(store => {
 				const allComments = flattenComments(store.comments)
+				
+				// 중복 댓글 방지
+				const exists = allComments.find(c => c.id === comment.id)
+				if (exists) {
+					console.log('Comment already exists, skipping:', comment.id)
+					return store
+				}
+				
 				allComments.push(comment)
 				const tree = buildCommentTree(allComments)
 				
+				console.log('Updated comment tree count:', allComments.length)
 				return {
 					...store,
 					comments: tree,
@@ -92,6 +102,7 @@ function createCommentStore() {
 			update(store => {
 				// 채널이 있으면 구독 해제
 				if (store.channel) {
+					console.log('Unsubscribing from realtime channel')
 					store.channel.unsubscribe()
 				}
 				

@@ -8,8 +8,8 @@
 	
 	let { data }: { data: PageData } = $props();
 	
-	let renderedContent = '';
-	let isDeleting = false;
+	let renderedContent = $state('');
+	let isDeleting = $state(false);
 	
 	// 마크다운 렌더링
 	onMount(() => {
@@ -126,7 +126,7 @@
 							수정
 						</a>
 						<button
-							on:click={handleDelete}
+							onclick={handleDelete}
 							disabled={isDeleting}
 							class="px-3 py-1 text-sm text-red-600 bg-red-50 rounded hover:bg-red-100 disabled:opacity-50"
 						>
