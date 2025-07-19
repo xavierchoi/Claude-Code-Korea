@@ -1,9 +1,9 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals, fetch, cookies }) => {
-	// 게시글 조회
-	const response = await fetch(`/api/posts/by-slug/${params.category}/${params.slug}`);
+export const load: PageServerLoad = async ({ params, locals, fetch }) => {
+	// ID로 게시글 조회
+	const response = await fetch(`/api/posts/${params.id}`);
 	
 	if (!response.ok) {
 		if (response.status === 404) {
@@ -15,13 +15,9 @@ export const load: PageServerLoad = async ({ params, locals, fetch, cookies }) =
 	const data = await response.json();
 	const post = data.post;
 	
-	// 댓글 조회
-	const commentsResponse = await fetch(`/api/posts/${post.id}/comments`);
-	let comments = [];
-	
-	if (commentsResponse.ok) {
-		const commentsData = await commentsResponse.json();
-		comments = commentsData.comments;
+	// 실제 게시물이면 올바른 URL로 리다이렉트
+	if (post.category?.slug && post.slug) {
+		throw redirect(301, `/forum/${post.category.slug}/${post.slug}`);
 	}
 	
 	// 현재 사용자 정보
@@ -31,7 +27,6 @@ export const load: PageServerLoad = async ({ params, locals, fetch, cookies }) =
 	
 	return {
 		post,
-		comments,
 		session,
 		isAuthor,
 		isAdmin

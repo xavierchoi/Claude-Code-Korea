@@ -1,16 +1,25 @@
 <script lang="ts">
+	import { browser } from '$app/environment'
+	import { page } from '$app/stores'
 	import { isAuthenticated, user } from '$lib/stores'
+	import { goto } from '$app/navigation'
+	import BoardList from '$lib/components/forum/BoardList.svelte'
+	import BoardHeader from '$lib/components/forum/BoardHeader.svelte'
+	import BoardSidebar from '$lib/components/forum/BoardSidebar.svelte'
+	import type { PageData } from './$types'
 	
-	// Heroicons imports
-	import ChatBubbleLeftEllipsisIcon from 'heroicons/24/outline/chat-bubble-left-ellipsis.svg?raw'
-	import BriefcaseIcon from 'heroicons/24/outline/briefcase.svg?raw'
-	import CodeBracketIcon from 'heroicons/24/outline/code-bracket.svg?raw'
-	
-	let { data } = $props()
+	let { data }: { data: PageData } = $props()
 	
 	// Reactive auth state
 	let isAuth = $state(false)
 	let currentUser = $state<any>(null)
+	
+	// Board state
+	let selectedCategory = $state('all')
+	let searchQuery = $state('')
+	
+	// Get current page from URL
+	let currentPage = $derived(Number($page.url.searchParams.get('page')) || 1)
 	
 	$effect(() => {
 		const unsubAuth = isAuthenticated.subscribe(value => isAuth = value)
@@ -21,128 +30,119 @@
 			unsubUser()
 		}
 	})
+	
+	// 서버에서 전달받은 데이터
+	const categories = data.categories || []
+	
+	// 게시물 데이터
+	let posts = $state(data.posts || [])
+	
+	// 사이드바 데이터
+	const popularPosts = data.popularPosts || []
+	const recentComments = data.recentComments || []
+	const topUsers = data.topUsers || []
+	const announcement = data.announcement || null
+	const rules = data.rules || []
+	
+	// 필터링된 게시물
+	const filteredPosts = $derived(posts.filter(post => {
+		if (selectedCategory !== 'all') {
+			const category = categories.find(c => c.id === selectedCategory)
+			if (category && post.category.name !== category.name) {
+				return false
+			}
+		}
+		
+		if (searchQuery) {
+			const query = searchQuery.toLowerCase()
+			return post.title.toLowerCase().includes(query) ||
+				   post.content.toLowerCase().includes(query) ||
+				   post.author.username.toLowerCase().includes(query)
+		}
+		
+		return true
+	}))
+	
+	// 페이지네이션 - 서버에서 처리된 데이터 사용
+	const totalPages = data.pagination?.totalPages || 1
+	const paginatedPosts = $derived(filteredPosts) // 이미 페이지네이션된 데이터
+	
+	// 통계 데이터
+	const stats = $derived({
+		totalPosts: data.pagination?.totalCount || posts.length,
+		todayPosts: posts.filter(p => p.is_new).length,
+		onlineUsers: 35 // 고정값 사용
+	})
+	
+	// 이벤트 핸들러
+	function handleCategoryChange(categoryId: string) {
+		selectedCategory = categoryId
+		currentPage = 1
+	}
+	
+	function handleSearch(query: string) {
+		searchQuery = query
+		currentPage = 1
+	}
+	
+	function handleWriteClick() {
+		goto('/posts/new')
+	}
+	
+	function handlePostClick(post: any) {
+		// 실제 게시물은 category/slug 형식 사용
+		if (post.category?.slug && post.slug) {
+			goto(`/forum/${post.category.slug}/${post.slug}`)
+		} else {
+			// 더미 데이터는 ID 사용
+			goto(`/forum/post/${post.id}`)
+		}
+	}
+	
+	function handlePageChange(page: number) {
+		goto(`?page=${page}`, { replaceState: true })
+		window.scrollTo({ top: 0, behavior: 'smooth' })
+	}
 </script>
 
-<!-- Hero Section -->
-<section class="bg-gradient-to-br from-primary-50 to-primary-100 py-20">
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="text-center">
-			<h1 class="text-4xl font-extrabold text-primary-900 sm:text-5xl md:text-6xl">
-				<span class="block">Claude와 함께하는</span>
-				<span class="block text-accent-500">개발 여정</span>
-			</h1>
-			<p class="mt-6 max-w-2xl mx-auto text-xl text-primary-600">
-				한국 Claude 개발자들을 위한 커뮤니티 플랫폼입니다. 
-				AI와 함께 더 나은 코드를 작성하고, 지식을 공유하세요.
-			</p>
-			
-			{#if isAuth && currentUser}
-				<div class="mt-10">
-					<p class="text-lg text-primary-700 mb-6">
-						환영합니다, <span class="font-semibold text-accent-500">{currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0]}</span>님!
-					</p>
-					<div class="flex flex-col sm:flex-row gap-4 justify-center">
-						<a 
-							href="/forum" 
-							class="bg-accent-500 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-accent-600 transition-colors"
-						>
-							포럼 둘러보기
-						</a>
-						<a 
-							href="/projects" 
-							class="bg-white text-accent-500 border-2 border-accent-500 px-8 py-3 rounded-lg text-lg font-medium hover:bg-accent-50 transition-colors"
-						>
-							프로젝트 갤러리
-						</a>
-					</div>
-				</div>
-			{:else}
-				<div class="mt-10">
-					<a 
-						href="/auth" 
-						class="bg-accent-500 text-white px-8 py-4 rounded-lg text-xl font-medium hover:bg-accent-600 transition-colors inline-block"
-					>
-						지금 시작하기
-					</a>
-				</div>
-			{/if}
-		</div>
-	</div>
-</section>
+<!-- 게시판 헤더 -->
+<BoardHeader
+	{categories}
+	{selectedCategory}
+	onCategoryChange={handleCategoryChange}
+	onSearch={handleSearch}
+	onWriteClick={handleWriteClick}
+	isAuthenticated={isAuth}
+	{stats}
+/>
 
-<!-- Features Section -->
-<section class="py-20 bg-white">
+<!-- 메인 컨텐츠 영역 -->
+<div class="bg-gray-50 min-h-screen py-6">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="text-center mb-16">
-			<h2 class="text-3xl font-extrabold text-primary-900 sm:text-4xl">
-				커뮤니티 기능
-			</h2>
-			<p class="mt-4 text-xl text-primary-600">
-				Claude Code Korea에서 제공하는 다양한 기능들을 살펴보세요
-			</p>
-		</div>
-		
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-			<!-- Forum Feature -->
-			<div class="text-center p-6 rounded-lg border border-primary-200 hover:shadow-lg transition-shadow">
-				<div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-					<div class="w-6 h-6 text-blue-600">
-						{@html ChatBubbleLeftEllipsisIcon}
-					</div>
-				</div>
-				<h3 class="text-xl font-semibold text-primary-900 mb-2">포럼</h3>
-				<p class="text-primary-600">
-					Claude 관련 질문과 답변을 공유하고, 다른 개발자들과 소통하세요.
-				</p>
+		<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+			<!-- 게시판 목록 (왼쪽 3/4) -->
+			<div class="lg:col-span-3">
+				<BoardList
+					posts={paginatedPosts}
+					category={selectedCategory === 'all' ? '전체 게시판' : categories.find(c => c.id === selectedCategory)?.name || '전체'}
+					showPagination={true}
+					{currentPage}
+					{totalPages}
+					onPageChange={handlePageChange}
+					onPostClick={handlePostClick}
+				/>
 			</div>
 			
-			<!-- Projects Feature -->
-			<div class="text-center p-6 rounded-lg border border-primary-200 hover:shadow-lg transition-shadow">
-				<div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-					<div class="w-6 h-6 text-green-600">
-						{@html BriefcaseIcon}
-					</div>
-				</div>
-				<h3 class="text-xl font-semibold text-primary-900 mb-2">프로젝트 갤러리</h3>
-				<p class="text-primary-600">
-					Claude를 활용한 프로젝트들을 공유하고 영감을 얻어보세요.
-				</p>
-			</div>
-			
-			<!-- Code Snippets Feature -->
-			<div class="text-center p-6 rounded-lg border border-primary-200 hover:shadow-lg transition-shadow">
-				<div class="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-					<div class="w-6 h-6 text-accent-600">
-						{@html CodeBracketIcon}
-					</div>
-				</div>
-				<h3 class="text-xl font-semibold text-primary-900 mb-2">코드 스니펫</h3>
-				<p class="text-primary-600">
-					유용한 코드 조각들을 공유하고 재사용 가능한 솔루션을 찾아보세요.
-				</p>
+			<!-- 사이드바 (오른쪽 1/4) -->
+			<div class="lg:col-span-1">
+				<BoardSidebar
+					{popularPosts}
+					{recentComments}
+					{topUsers}
+					{announcement}
+					{rules}
+				/>
 			</div>
 		</div>
 	</div>
-</section>
-
-<!-- CTA Section -->
-<section class="bg-accent-500 py-16">
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-		<h2 class="text-3xl font-extrabold text-white sm:text-4xl">
-			지금 바로 시작하세요
-		</h2>
-		<p class="mt-4 text-xl text-accent-100">
-			Claude Code Korea 커뮤니티에 참여하여 더 나은 개발자가 되어보세요.
-		</p>
-		{#if !isAuth}
-			<div class="mt-8">
-				<a 
-					href="/auth" 
-					class="bg-white text-accent-600 px-8 py-3 rounded-lg text-lg font-medium hover:bg-primary-50 transition-colors inline-block"
-				>
-					무료로 가입하기
-				</a>
-			</div>
-		{/if}
-	</div>
-</section>
+</div>

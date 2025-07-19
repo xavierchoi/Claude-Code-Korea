@@ -1,6 +1,15 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
+export const GET: RequestHandler = async ({ locals }) => {
+	const { session } = await locals.safeGetSession()
+	
+	return json({
+		authenticated: !!session,
+		user: session?.user || null
+	})
+}
+
 export const POST: RequestHandler = async ({ request, locals: { supabase } }) => {
   try {
     const { access_token, refresh_token } = await request.json()

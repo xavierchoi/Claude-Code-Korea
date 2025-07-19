@@ -1,13 +1,16 @@
 <script lang="ts">
 	import '../app.css';
 	import { invalidate } from '$app/navigation'
-	import { onMount } from 'svelte'
+	import { onMount, setContext } from 'svelte'
 	import { supabase } from '$lib/supabase'
 	import { auth, profile } from '$lib/stores'
 	import Header from '$lib/components/Header.svelte'
 	import Footer from '$lib/components/Footer.svelte'
 
 	let { children, data } = $props();
+	
+	// Supabase 클라이언트를 context로 제공
+	setContext('supabase', supabase)
 
 	onMount(() => {
 		// Initialize auth store

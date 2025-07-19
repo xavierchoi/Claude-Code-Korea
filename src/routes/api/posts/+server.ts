@@ -170,15 +170,39 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}, { status: 400 });
 		}
 		
-		// 슬러그 생성
-		const timestamp = Date.now().toString(36);
-		const randomStr = Math.random().toString(36).substring(2, 5);
-		const baseSlug = body.title
-			.toLowerCase()
-			.replace(/[^\w\s가-힣]/g, '')
-			.replace(/\s+/g, '-')
-			.substring(0, 50);
-		const slug = `${baseSlug}-${timestamp}${randomStr}`;
+		// 순차적 숫자 slug 생성 (0부터 시작)
+		// 먼저 가장 큰 숫자 slug 찾기
+		const { data: posts } = await supabase
+			.from('posts')
+			.select('slug')
+			.order('created_at', { ascending: false })
+			.limit(100);
+		
+		let nextNumber = 0; // 0부터 시작
+		
+		if (posts && posts.length > 0) {
+			// 숫자로만 된 slug들을 찾아서 가장 큰 값 찾기
+			const numericSlugs = posts
+				.map(p => parseInt(p.slug))
+				.filter(n => !isNaN(n) && n >= 0 && n <= 999999)
+				.sort((a, b) => b - a);
+			
+			if (numericSlugs.length > 0) {
+				nextNumber = numericSlugs[0] + 1;
+			}
+		}
+		
+		// 한계 체크 및 slug 생성
+		let slug: string;
+		if (nextNumber > 999999) {
+			// 한계에 도달한 경우 기존 방식으로 폴백
+			const timestamp = Date.now().toString(36);
+			const randomStr = Math.random().toString(36).substring(2, 5);
+			slug = `${timestamp}${randomStr}`;
+			console.warn('Numeric slug limit reached (999999), using fallback slug:', slug);
+		} else {
+			slug = nextNumber.toString();
+		}
 		
 		// 게시글 생성
 		const { data, error } = await supabase

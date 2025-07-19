@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdown.client';
 	import type { PageData } from './$types';
+	import CommentList from '$lib/components/forum/CommentList.svelte';
 	
 	let { data }: { data: PageData } = $props();
 	
@@ -175,40 +176,20 @@
 		</div>
 	</article>
 	
-	<!-- 댓글 섹션 (추후 구현) -->
-	<section class="mt-8">
-		<h2 class="text-xl font-bold mb-4">
-			댓글 <span class="text-gray-500">({data.post.comment_count})</span>
-		</h2>
-		
-		{#if data.post.is_locked}
+	<!-- 댓글 섹션 -->
+	{#if !data.post.is_locked}
+		<CommentList 
+			comments={data.comments || []}
+			postId={data.post.id}
+			currentUserId={data.session?.user?.id}
+			isLoggedIn={!!data.session}
+			isAdmin={data.isAdmin}
+		/>
+	{:else}
+		<section class="mt-8">
 			<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
 				이 게시글은 잠겨있어 댓글을 작성할 수 없습니다.
 			</div>
-		{:else if data.session}
-			<div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-				<textarea
-					placeholder="댓글을 작성하세요..."
-					class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-					rows="3"
-				/>
-				<div class="mt-2 flex justify-end">
-					<button
-						class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-					>
-						댓글 작성
-					</button>
-				</div>
-			</div>
-		{:else}
-			<div class="bg-gray-50 rounded-lg p-4 text-center">
-				<p class="text-gray-600">댓글을 작성하려면 <a href="/auth" class="text-blue-600 hover:text-blue-800">로그인</a>이 필요합니다.</p>
-			</div>
-		{/if}
-		
-		<!-- 댓글 목록 (추후 구현) -->
-		<div class="space-y-4">
-			<p class="text-gray-500 text-center py-8">아직 댓글이 없습니다.</p>
-		</div>
-	</section>
+		</section>
+	{/if}
 </div>
